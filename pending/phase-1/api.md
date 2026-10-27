@@ -69,6 +69,36 @@ Adapters:
 - The capabilities (`layer/*`, `repo/*`) are built on this API, never
   on git directly.
 
+## Instrumentation and audit (from the ground up)
+
+- Every operation, at every level (uri, xpath, backend, rules,
+  capability), goes through one wrapper that emits an event: `{ run,
+  seq, parent, level, op, args, result, ms, error }`. Bytes are
+  recorded by oid and size, not content. `parent` links the events
+  into a call tree, so a capability call shows its git operations.
+- Every package takes a `sink`; none writes the audit log itself. The
+  test suite uses a memory sink; a run uses a repository sink.
+- The audit log is execution data of the request, so it goes to
+  `pending/default` under `pending/<request>/runs/<run>/` as JSON lines,
+  committed at step boundaries. The sink writes through the
+  uninstrumented backend, so auditing never audits itself.
+
+## Test run
+
+1. Seed: `repo/seed` creates a fresh repository with `main` (the code),
+   `pending/default` (the request) and `execute/main`.
+2. From then on the seeded repository does everything itself. It deploys
+   `main` into `capability/test` (`layer/deploy`), runs the capabilities
+   from there, and works through the request flow, with origin and
+   product repositories as local bare repositories.
+3. Everything is logged into the repository itself.
+4. Analyse: a separate step reads only the repository. It checks the
+   audit log, `repo/integrity` and the layers, and writes a report with
+   its verdicts back into `pending/default`.
+
+The run repository is the whole result. It can be kept, pushed or
+thrown away.
+
 ## Open
 
 - Runtime order: Node first (native git and isomorphic-git), then Bare?
