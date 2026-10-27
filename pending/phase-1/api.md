@@ -78,26 +78,33 @@ Adapters:
   into a call tree, so a capability call shows its git operations.
 - Every package takes a `sink`; none writes the audit log itself. The
   test suite uses a memory sink; a run uses a repository sink.
-- The audit log is execution data of the request, so it goes to
-  `pending/default` under `pending/<request>/runs/<run>/` as JSON lines,
-  committed at step boundaries. The sink writes through the
+- In a run, the audit log is execution data of the run's request. It is
+  kept in the execution instance repository, on its own
+  `pending/default`, under `pending/<request>/runs/<run>/`, as JSON
+  lines committed at step boundaries. The sink writes through the
   uninstrumented backend, so auditing never audits itself.
 
 ## Test run
 
-1. Seed: `repo/seed` creates a fresh repository with `main` (the code),
-   `pending/default` (the request) and `execute/main`.
-2. From then on the seeded repository does everything itself. It deploys
-   `main` into `capability/test` (`layer/deploy`), runs the capabilities
-   from there, and works through the request flow, with origin and
-   product repositories as local bare repositories.
-3. Everything is logged into the repository itself.
-4. Analyse: a separate step reads only the repository. It checks the
-   audit log, `repo/integrity` and the layers, and writes a report with
-   its verdicts back into `pending/default`.
+Test runs happen in an execution instance repository, not in this dev
+repository. This repository stays the development source.
 
-The run repository is the whole result. It can be kept, pushed or
-thrown away.
+1. Seed: `repo/seed` creates the instance repository from this one: the
+   code from `main`, the run's request on its `pending/default`, and
+   `execute/main`.
+2. From then on the instance repository does everything itself. It
+   deploys into its `capability/test` (`layer/deploy`), runs from there,
+   and works through the request flow. Its origin and product
+   repositories are local bare repositories.
+3. Everything is logged into the instance repository itself.
+4. Analyse: a separate step reads only the instance repository. It
+   checks the audit log, `repo/integrity` and the layers, and writes a
+   report with its verdicts.
+
+The instance repository holds all of its data, as the rules say for data
+from a unit in operation. Only the report comes back here, as the
+response to the request. Where instance repositories live (local,
+or hosted when the human creates one) is open.
 
 ## Open
 
