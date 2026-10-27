@@ -35,5 +35,6 @@ for now; it moves to a shared place when a second package needs it.
 ## Tests
 
 - `npm test`: the unit tests
-- `test/commands.txt`: commands for a test run, through `cli.js`, which
+- `test/commands.txt`: commands for a test run (`<expect> <command>`),
+  most through `cli.js`, which
   prints the audit events and the outcome as JSON lines
