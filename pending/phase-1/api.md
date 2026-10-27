@@ -123,6 +123,21 @@ through `execute/*` into its `main`.
   4. Read the response from its `main`, or bundle the run again.
 - The analysis at the end of a run is itself such a request.
 
+## Promotion carries its evidence
+
+- Promotion (`capability/test` → `capability/default`) deploys the
+  tested tree together with the summary report of the run that tested
+  that exact tree: what ran, on which engines and runtimes, and the
+  verdicts. The layer stays self-contained: reading it shows what it
+  does and that it was tested.
+- The deploy commit references its source commit on `main`, the run id
+  and where the run's bundle is kept. The full evidence is reached
+  through the run's request API, not copied into the layer.
+- `repo/integrity` checks it: no tree on `capability/default` without a
+  passing report for that tree. The exception is the first deployment,
+  a bootstrap by hand, which is marked as one.
+- Open: one report per capability, or one for the whole layer.
+
 ## Open
 
 - Runtime order: Node first (native git and isomorphic-git), then Bare?
