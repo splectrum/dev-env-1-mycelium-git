@@ -106,6 +106,23 @@ from a unit in operation. Only the report comes back here, as the
 response to the request. Where instance repositories live (local,
 or hosted when the human creates one) is open.
 
+## Requests as the public API
+
+A repository is used only through its request flow. Nobody reaches into
+it; you put a request in its `pending/default`, and it executes the
+request with its own deployed capabilities. The response comes back
+through `execute/*` into its `main`.
+
+- A kept run is stored here as data: a git bundle at
+  `pending/<request>/runs/<run>.bundle`. It is not a working repository.
+- To get anything from a stored run, such as its report or a fresh
+  analysis:
+  1. Inflate the bundle (`git clone --bare`).
+  2. Put the request into the run's `pending/default`.
+  3. The run executes it on its own `capability/default`.
+  4. Read the response from its `main`, or bundle the run again.
+- The analysis at the end of a run is itself such a request.
+
 ## Open
 
 - Runtime order: Node first (native git and isomorphic-git), then Bare?
