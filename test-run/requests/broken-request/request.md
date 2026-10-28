@@ -1,5 +1,5 @@
 # Request: broken-request
 
-Check that a runner that cannot complete is an error, not a pass.
+Names a tests file that does not exist, so the runner cannot complete.
 
 Run: pending/broken-request/missing.txt in mycelium-uri

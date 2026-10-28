@@ -1,10 +1,14 @@
 #!/usr/bin/env node
-// Report on a repository's own requests and runs, from its own contents.
+// Report: interprets the record. For every executed Run request it compares
+// each recorded invocation with the expectation the request gave for it.
 //   node report.js <repo> runs
-// Prints markdown: the branches, then per request on pending/default its
-// runs with verdicts, and the tests that failed. Reads only; changes nothing.
+// Expectations are on the test lines, after '=>':
+//   => <json>        the last JSON line of the output must equal it
+//   => exit <code>   the exit code must be <code> ('null': did not start)
+// Reads the repository only, at the states each run recorded; prints markdown.
 
 import { spawnSync } from 'node:child_process'
+import { isDeepStrictEqual } from 'node:util'
 
 const [repo, scope] = process.argv.slice(2)
 if (!repo || scope !== 'runs') {
@@ -15,52 +19,69 @@ if (!repo || scope !== 'runs') {
 const git = (...args) => {
   const r = spawnSync('git', args, { cwd: repo, encoding: 'utf8', maxBuffer: 1 << 30 })
   if (r.status !== 0) throw new Error(`git ${args.join(' ')}: ${r.stderr.trim()}`)
-  return r.stdout.trim()
+  return r.stdout
 }
-const lines = text => text.split('\n').filter(Boolean)
 const exists = spec => spawnSync('git', ['cat-file', '-e', spec], { cwd: repo }).status === 0
+const lines = text => text.split('\n').filter(Boolean)
 
-const out = ['# Report: runs', '']
+const out = ['# Test report', '']
+const totals = { requests: 0, invocations: 0, met: 0, unmet: 0, unchecked: 0, incomplete: 0 }
 
-out.push('## Branches', '', '| Branch | Head | Commits |', '|---|---|---|')
-for (const line of lines(git('for-each-ref', '--format=%(refname:short) %(objectname:short)', 'refs/heads'))) {
-  const [branch, head] = line.split(' ')
-  out.push(`| \`${branch}\` | \`${head}\` | ${git('rev-list', '--count', branch)} |`)
-}
-out.push('')
+for (const name of exists('main:responses') ? lines(git('ls-tree', '-d', '--name-only', 'main:responses/')) : []) {
+  const base = `main:responses/${name}`
+  if (!exists(`${base}/unit.json`)) continue
+  const unit = JSON.parse(git('show', `${base}/unit.json`))
+  const m = (unit.invocation.line || '').match(/^Run:\s*(\S+)\s+in\s+(\S+)/)
+  if (!m) continue
+  totals.requests++
+  const [, testsPath, folder] = m
+  const cap = Object.keys(unit.state).find(b => b.startsWith('capability/'))
+  out.push(`## ${name}`, '', `\`${testsPath}\` in \`${folder}\`, from \`${cap}\` at \`${unit.state[cap].slice(0, 7)}\`.`, '')
 
-out.push('## Requests', '')
-let runs = 0
-let notPassed = 0
-for (const name of lines(git('ls-tree', '-d', '--name-only', 'pending/default:pending'))) {
-  const base = `pending/default:pending/${name}`
-  if (!exists(`${base}/request.md`)) continue
-  const title = git('show', `${base}/request.md`).split('\n')[0].replace(/^#\s*/, '')
-  const answered = exists(`main:responses/${name}.md`)
-  out.push(`### ${name}`, '', `${title}. ${answered ? 'Answered on `main`.' : 'Not answered yet.'}`, '')
+  if (!exists(`${base}/results.jsonl`) || exists(`${base}/error.txt`)) {
+    totals.incomplete++
+    out.push('**Did not complete.** No record of invocations to check.', '')
+    continue
+  }
 
-  const runIds = exists(`${base}/runs`) ? lines(git('ls-tree', '-d', '--name-only', `${base}/runs/`)) : []
-  if (runIds.length === 0) { out.push('No runs.', ''); continue }
-
-  out.push('| Run | Verdict | Tests | Capability |', '|---|---|---|---|')
-  const failures = []
-  for (const id of runIds) {
-    const run = JSON.parse(git('show', `${base}/runs/${id}/run.json`))
-    runs++
-    if (run.verdict !== 'pass') notPassed++
-    const tests = typeof run.tests === 'number' ? `${run.passed}/${run.tests}` : '—'
-    out.push(`| \`${id}\` | ${run.verdict} | ${tests} | \`${run.capability}@${run.capabilityCommit.slice(0, 7)}\` |`)
-    if (run.verdict === 'error') failures.push(`- \`${id}\`: did not complete (exit ${run.runnerExit ?? run.reportExit})`)
-    if (exists(`${base}/runs/${id}/results.jsonl`)) {
-      for (const l of lines(git('show', `${base}/runs/${id}/results.jsonl`))) {
-        const t = JSON.parse(l)
-        if (!t.pass) failures.push(`- \`${id}\` line ${t.line}: \`${t.command.join(' ')}\` expected ${t.expect}, got ${t.got} (exit ${t.code})`)
-      }
+  // The expectations, from the tests file at the state the run recorded.
+  const testsAt = testsPath.startsWith('pending/') ? unit.state['pending/default'] : unit.state[cap]
+  const testLines = git('show', `${testsAt}:${testsPath}`).split('\n')
+  const rows = []
+  const counts = { met: 0, unmet: 0, unchecked: 0 }
+  for (const rec of lines(git('show', `${base}/results.jsonl`)).map(l => JSON.parse(l))) {
+    const expectation = (testLines[rec.line - 1].split('=>')[1] || '').trim()
+    const verdict = check(rec, expectation)
+    counts[verdict.status]++
+    if (verdict.status !== 'met') {
+      rows.push(`| ${rec.line} | \`${rec.command.join(' ')}\` | ${expectation ? '`' + expectation + '`' : '—'} | \`${verdict.got}\` | ${verdict.status} |`)
     }
   }
-  out.push('')
-  if (failures.length) out.push('Not passed:', '', ...failures, '')
+  totals.invocations += counts.met + counts.unmet + counts.unchecked
+  for (const k of Object.keys(counts)) totals[k] += counts[k]
+  out.push(`${counts.met} met, ${counts.unmet} not met, ${counts.unchecked} without expectation.`, '')
+  if (rows.length) {
+    out.push('| Line | Invocation | Expected | Got | |', '|---|---|---|---|---|', ...rows, '')
+  }
 }
 
-out.push('## Summary', '', `${runs} runs, ${runs - notPassed} passed, ${notPassed} not passed.`, '')
+out.push('## Summary', '',
+  `${totals.requests} requests, ${totals.invocations} invocations: ${totals.met} met, ` +
+  `${totals.unmet} not met, ${totals.unchecked} without expectation; ${totals.incomplete} requests did not complete.`, '')
 console.log(out.join('\n'))
+
+function check (rec, expectation) {
+  const last = lines(rec.stdout || '').pop()
+  let response
+  try { response = JSON.parse(last) } catch { response = undefined }
+  const got = rec.code === 0 || response !== undefined ? (last ?? `exit ${rec.code}`) : `exit ${rec.code}`
+  if (!expectation) return { status: 'unchecked', got }
+  const exit = expectation.match(/^exit\s+(\S+)$/)
+  if (exit) {
+    const want = exit[1] === 'null' ? null : Number(exit[1])
+    return { status: rec.code === want ? 'met' : 'unmet', got: `exit ${rec.code}` }
+  }
+  let want
+  try { want = JSON.parse(expectation) } catch { return { status: 'unmet', got: 'bad expectation' } }
+  return { status: isDeepStrictEqual(response, want) ? 'met' : 'unmet', got }
+}
