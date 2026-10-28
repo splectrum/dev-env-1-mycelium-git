@@ -1,61 +1,62 @@
 # test-run
 
-A first, hand-made test run: seed an instance repository, deploy a module
-into it and let the instance execute its pending request itself. It's
-what `repo/seed`, `layer/deploy` and `layer/request` will become.
+A hand-made test run. A test-run repository is kicked into action and
+executes its requests; it records what happened and does not judge. A
+report request afterwards interprets the record. These scripts are what
+`repo/seed`, `layer/deploy` and `layer/request` will become.
 
 ```sh
-test-run/seed.sh /tmp/runs/r1 mycelium-uri   # from the dev repo's root
-/tmp/runs/r1/.git/hooks/execute               # the execution hook
+test-run/seed.sh /tmp/runs/r1 mycelium-uri test-mycelium-uri test-run/requests/report-runs
+/tmp/runs/r1/.git/hooks/execute               # the kick
+git -C /tmp/runs/r1 show main:responses/report-runs/report.md
 ```
 
 - `seed.sh` creates the instance: `main` (README only), `capability/test`
-  (the module plus `runner.js` and `execute.js`), `pending/default` (the
-  request), `execute/main`, and the hook `.git/hooks/execute`.
-- `execute.js`, the execution hook, runs from the deployed tree. For each
-  request on `pending/default` with no response on `main` yet:
-  1. It extracts `capability/test` and runs the request's tests file
-     through the runner.
-  2. It commits the results to `pending/default`, under
-     `pending/<request>/runs/<run>/`.
-  3. It commits the response on `execute/main` and merges it into `main`
-     with a plain merge.
-- `runner.js` reads tests line by line (`<expect> <command> <arg>...`),
-  runs each without a shell and writes one JSON line per test.
+  (the module plus `runner.js`, `execute.js` and `report.js`),
+  `pending/default` (the requests), `execute/main`, and the kick
+  `.git/hooks/execute`. Git never calls it; it is the trigger, and runs
+  `execute.js` as deployed on `capability/test`. Seed only from a
+  committed dev state.
+- `execute.js` executes each request with no response on `main` yet: Run
+  requests first, then Report requests. Each response goes on
+  `execute/main`, merged into `main` with a plain merge, as
+  `responses/<request>/`:
+  - `response.md`: what was executed, on which states, and the outcome.
+  - `unit.json`: the unit record. It holds the invocation, every state by
+    commit, the environment and the nondeterministic inputs, which is
+    enough to rerun it.
+  - `results.jsonl` (Run): one line per invocation, with its command,
+    exit code and output.
+  - `report.md` (Report).
 
-Requests that test the run machinery itself are in `requests/`: a run
-that must fail (`fail-on-purpose`) and one whose runner cannot complete
-(`broken-request`). Add them when seeding:
+  `pending/default` is never written; it holds the requests.
+- `runner.js` executes a tests file line by line, each command without a
+  shell, and records it.
+- `report.js` (`Report: runs`) compares every recorded invocation with its
+  expectation, read from the tests file at the recorded state.
 
-```sh
-test-run/seed.sh /tmp/runs/r2 mycelium-uri test-mycelium-uri \
-  test-run/requests/fail-on-purpose test-run/requests/broken-request
-```
+## Requests
+
+A request names its tests: `Run: mycelium-uri/test/commands.txt in
+mycelium-uri`. A tests file under `pending/` is read from the request
+itself. A test line is `<command> <arg>... => <expectation>`. The
+expectation is the JSON response (the last output line) or `exit <code>`.
+It is part of the request; only the report reads it.
+
+`requests/` holds requests that exercise the machinery: `fail-on-purpose`
+(expectations not met), `broken-request` (the runner cannot complete) and
+`report-runs` (the report).
 
 ## Keeping and asking a run
 
 Every run is kept for later review as a bundle, its full self-contained
-record: `test-run/keep.sh <repo> <bundle-file>`. Kept runs are data:
-they go on the dev repository's `main`, in `test-runs/`, through
-`execute/main` like any other change. To ask it
-something, inflate it, deploy what it needs, put in a request, and execute:
+record: `test-run/keep.sh <repo> <bundle-file>`. Kept runs are data: they
+go on the dev repository's `main`, in `test-runs/`, through `execute/main`
+like any other change. To ask a kept run something:
 
 ```sh
-test-run/inflate.sh r5.bundle /tmp/runs/r5     # all branches, plus the hook
-test-run/deploy.sh /tmp/runs/r5 mycelium-uri   # new deploy commit on capability/test
-test-run/request.sh /tmp/runs/r5 test-run/requests/report-runs
-/tmp/runs/r5/.git/hooks/execute
-git -C /tmp/runs/r5 show main:responses/report-runs.md
+test-run/inflate.sh r7.bundle /tmp/runs/r7     # all branches, plus the kick
+test-run/deploy.sh /tmp/runs/r7 mycelium-uri   # only if it needs new capabilities
+test-run/request.sh /tmp/runs/r7 <request-dir>
+/tmp/runs/r7/.git/hooks/execute
 ```
-
-A `Report: runs` request is answered by the deployed `report.js`. It lists
-the branches, each request with its runs and verdicts, and the tests that
-did not pass. The report is kept with the run and is also the body of the
-response.
-
-A run's verdict is `pass` when all tests passed, `fail` when tests ran and
-some failed, and `error` when the runner did not complete.
-
-A request names its tests in a `Run:` line:
-`Run: mycelium-uri/test/commands.txt in mycelium-uri`. A tests file under
-`pending/` is read from the request itself, on `pending/default`.

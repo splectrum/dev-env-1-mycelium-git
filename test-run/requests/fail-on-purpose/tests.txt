@@ -1,7 +1,9 @@
-# right
-ok    node cli.js parse /main
+# Expectations a report must find not met, next to one that is met.
+node cli.js parse /main => {"result":["main"]}
 # wrong expectations
-ok    node cli.js parse main
-error node cli.js parse /main
-# no such command
-ok    no-such-command
+node cli.js parse main => {"result":["main"]}
+node cli.js parse /main => {"error":"not absolute: /main"}
+# no such command: it never starts
+no-such-command => exit 0
+# no expectation
+node cli.js isUri /main
