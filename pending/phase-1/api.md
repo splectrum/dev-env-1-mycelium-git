@@ -138,6 +138,32 @@ through `execute/*` into its `main`.
   a bootstrap by hand, which is marked as one.
 - Open: one report per capability, or one for the whole layer.
 
+## Code, capabilities and data
+
+- Module code as folders on `main` exists only in the dev repository,
+  where code is what is being developed. Each module is published to its
+  own repository.
+- In an instance repository, code exists only in the capability layer.
+  Its `main` holds data only. Deployed functionality is never data.
+- The capability layer is organised by capability URI (`state/uri`,
+  `layer/request`, …). That categorisation is internal to the layer: a
+  mapping from capability URIs to the deployed module folders, kept by
+  scripts. It never maps into data, and data never maps into it. External
+  APIs are built on top later.
+
+## Request state
+
+- Execution runs on `execute/<target>`, from a fixed data state: the
+  target is merged in before execution, and the branch receives only the
+  response.
+- Request state (the request, its discussion, execution data, verdicts)
+  is a subfolder `pending/<request>/` on `pending/default`.
+- For parallel execution later: `pending/<request>` branches, orphan,
+  plain-merged into `pending/default` on completion and deleted with
+  `-d`. Folder and branch names follow the same segment rules, so the
+  move needs no renaming. That would mean `pending/default` receives
+  merges, which must be stated in the rules.
+
 ## Open
 
 - Runtime order: Node first (native git and isomorphic-git), then Bare?
