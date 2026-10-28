@@ -19,6 +19,8 @@ src=$(pwd)
 shift $(( $# < 3 ? $# : 3 ))
 [ -d "$src/$module" ] || { echo "no module folder: $module" >&2; exit 2; }
 [ -e "$dir" ] && { echo "exists: $dir" >&2; exit 2; }
+# A run must be traceable to an exact commit: refuse uncommitted changes.
+[ -z "$(git -C "$src" status --porcelain)" ] || { echo "dev tree has uncommitted changes; commit first" >&2; exit 2; }
 source_commit=$(git -C "$src" rev-parse --short HEAD)
 
 export GIT_AUTHOR_NAME="test-run" GIT_AUTHOR_EMAIL="test-run@localhost"
