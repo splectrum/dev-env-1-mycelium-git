@@ -67,7 +67,7 @@ for (const name of exists('main:responses') ? lines(git('ls-tree', '-d', '--name
 
 out.push('## Summary', '',
   `${totals.requests} requests, ${totals.invocations} invocations: ${totals.met} met, ` +
-  `${totals.unmet} not met, ${totals.unchecked} without expectation; ${totals.incomplete} requests did not complete.`, '')
+  `${totals.unmet} not met, ${totals.unchecked} without expectation; ${totals.incomplete} did not complete.`, '')
 console.log(out.join('\n'))
 
 function check (rec, expectation) {
