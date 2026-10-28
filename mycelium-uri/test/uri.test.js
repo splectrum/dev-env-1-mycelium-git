@@ -32,6 +32,7 @@ test('join', () => {
   assert.equal(join('/', 'main'), '/main')
   assert.equal(join('/main', 'a/b', 'c'), '/main/a/b/c')
   assert.throws(() => join('/main', 'A'))
+  for (const bad of ['', 'a//b', '/a', 'a/']) assert.throws(() => join('/main', bad), undefined, bad)
 })
 
 test('parent', () => {
@@ -51,4 +52,7 @@ test('split', () => {
   assert.throws(() => split('/other/x', branches), /no branch/)
   assert.throws(() => split('/a/b', ['a', 'a/b']), /overlap/)
   assert.deepEqual(split('/main/x', new Set(['main'])), { branch: 'main', path: '/x' })
+  for (const bad of ['Feature_X', 'a//b', '/main', '']) {
+    assert.throws(() => split('/main/x', ['main', bad]), /bad branch name/, bad)
+  }
 })
