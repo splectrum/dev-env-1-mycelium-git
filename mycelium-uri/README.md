@@ -15,10 +15,12 @@ Plain functions, which throw on error:
 - `isUri(uri)` → boolean
 - `parse(uri)` → segments: `'/a/b'` → `['a', 'b']`, `'/'` → `[]`
 - `format(segments)` → uri
-- `join(uri, ...parts)` → uri; parts may hold `/`
+- `join(uri, ...parts)` → uri; a part may hold several segments
+  (`a/b`), but no empty ones: no `//`, no leading or trailing `/`
 - `parent(uri)` → uri; throws for the root
 - `split(uri, branches)` → `{ branch, path }`, where `branches` is any
-  iterable of branch names. Throws when no branch matches, or when more
+  iterable of branch names. Throws on a branch name that breaks the
+  rules, when no branch matches, or when more
   than one does (the rule that no name is both a branch and a prefix is
   broken)
 
