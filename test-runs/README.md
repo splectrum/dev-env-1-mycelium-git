@@ -13,4 +13,5 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-28-r5.bundle` | The same, seeded from committed dev state `d8c969d` |
 | `2026-10-28-r5-report.bundle` | r5 inflated, the report capability deployed, and a `Report: runs` request executed by the run itself |
 | `2026-10-28-r6.bundle` | mycelium-uri without instrumentation; each run records its unit: invocation, states by commit, environment, nondeterministic inputs |
+| `2026-10-28-r7.bundle` | The first run of the new model, seeded from the intermediate 'wip' commit; same outcome as r8 |
 | `2026-10-28-r8.bundle` | Execution only records, into each response on `main`; expectations on the test lines; a report request interprets: 26 met, 3 not met on purpose, 1 unchecked, 1 incomplete on purpose |
