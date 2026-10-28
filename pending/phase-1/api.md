@@ -188,6 +188,31 @@ through `execute/*` into its `main`.
     contains its runs, and the response's reference back to it is
     informative.
 
+## Checkpoints and transactions
+
+- A git commit is a checkpoint: a durable, atomic snapshot of one ref.
+- A transaction is a unit of work with an intent and an outcome. It can
+  coincide with a checkpoint (one put, one commit), or sit within one
+  (several changes committed together). A transaction that spans refs
+  spans several checkpoints: the request flow touches `pending/default`,
+  `execute/main` and `main`.
+- Git is atomic only per ref. A transaction across refs needs its own
+  record, kept in the request state, so a crash leaves a known partial
+  state that can be resumed or reported. Native git can update several
+  refs in one transaction (`update-ref --stdin`: start, prepare,
+  commit) and push them atomically (`push --atomic`). The backend
+  contract should offer a multi-ref update.
+- First seen in the test run: a crashed hook left one checkpoint done
+  and the next not started, with nothing recording it.
+
+## The repository as a process
+
+A key component. A repository is handled as a running process: seeded,
+executing requests, kept, inflated and asked again. Capabilities
+(under `repo/`, names open): seed, bundle (keep), inflate (from a
+bundle), browse (list its branches, history and files without
+unpacking), and request (put a request in, run it, read the response).
+
 ## Open
 
 - Runtime order: Node first (native git and isomorphic-git), then Bare?
