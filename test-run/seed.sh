@@ -1,6 +1,8 @@
 #!/bin/sh
 # Seed a test-run instance repository, by hand (bootstrap).
-#   test-run/seed.sh <new-repo-dir> <module> [request-name]
+#   test-run/seed.sh <new-repo-dir> <module> [request-name] [extra-request-dir]...
+# Extra request dirs (e.g. test-run/requests/fail-on-purpose) are added to
+# pending/default as they are, next to the module's own request.
 # Run from the dev repository's root. Creates an empty git repo with:
 #   main             README only (the instance's own data starts empty)
 #   capability/test  orphan: <module>/, runner.js and execute.js (the deployment)
@@ -14,6 +16,7 @@ dir=$1
 module=$2
 name=${3:-test-$module}
 src=$(pwd)
+shift $(( $# < 3 ? $# : 3 ))
 [ -d "$src/$module" ] || { echo "no module folder: $module" >&2; exit 2; }
 [ -e "$dir" ] && { echo "exists: $dir" >&2; exit 2; }
 source_commit=$(git -C "$src" rev-parse --short HEAD)
@@ -56,6 +59,7 @@ Run the test commands of $module on capability/test.
 
 Run: $module/test/commands.txt in $module
 REQ
+for extra in "$@"; do cp -r "$src/$extra" "pending/$(basename "$extra")"; done
 git add .
 git commit -q -m "Add request: $name"
 

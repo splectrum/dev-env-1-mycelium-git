@@ -23,5 +23,18 @@ test-run/seed.sh /tmp/runs/r1 mycelium-uri   # from the dev repo's root
 - `runner.js` reads tests line by line (`<expect> <command> <arg>...`),
   runs each without a shell and writes one JSON line per test.
 
+Requests that test the run machinery itself are in `requests/`: a run
+that must fail (`fail-on-purpose`) and one whose runner cannot complete
+(`broken-request`). Add them when seeding:
+
+```sh
+test-run/seed.sh /tmp/runs/r2 mycelium-uri test-mycelium-uri \
+  test-run/requests/fail-on-purpose test-run/requests/broken-request
+```
+
+A run's verdict is `pass` when all tests passed, `fail` when tests ran and
+some failed, and `error` when the runner did not complete.
+
 A request names its tests in a `Run:` line:
-`Run: mycelium-uri/test/commands.txt in mycelium-uri`.
+`Run: mycelium-uri/test/commands.txt in mycelium-uri`. A tests file under
+`pending/` is read from the request itself, on `pending/default`.

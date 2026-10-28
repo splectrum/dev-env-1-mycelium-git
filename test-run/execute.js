@@ -6,6 +6,9 @@
 // A request is pending/<name>/request.md. Its 'Run:' line names a tests file
 // and the folder to run it from, both in the capability tree:
 //   Run: mycelium-uri/test/commands.txt in mycelium-uri
+// A tests file under pending/ is read from pending/default instead, so a
+// request can bring its own tests:
+//   Run: pending/<name>/tests.txt in mycelium-uri
 // A request is answered when main holds responses/<name>.md.
 //
 // For each pending request:
@@ -35,6 +38,7 @@ const git = (args, opts = {}) => {
   return r.status === 0 ? r.stdout.trim() : null
 }
 
+git(['worktree', 'prune'])
 const requests = git(['ls-tree', '-d', '--name-only', 'pending/default:pending']).split('\n').filter(Boolean)
 const pending = requests.filter(name =>
   git(['cat-file', '-e', `pending/default:pending/${name}/request.md`], { allowFail: true }) !== null &&
@@ -70,11 +74,23 @@ for (const name of pending) {
     const runDir = join(pendingWt, 'pending', name, 'runs', run)
     mkdirSync(runDir, { recursive: true })
     const started = new Date().toISOString()
-    const r = spawnSync('node', [join(code, 'runner.js'), join(code, testsPath), join(code, folder),
+    let testsFile = join(code, testsPath)
+    if (testsPath.startsWith('pending/')) {
+      // A missing file stays missing, so the runner reports the error.
+      testsFile = join(work, 'tests.txt')
+      const tests = git(['show', `pending/default:${testsPath}`], { allowFail: true })
+      if (tests !== null) writeFileSync(testsFile, tests + '\n')
+    }
+    const r = spawnSync('node', [join(code, 'runner.js'), testsFile, join(code, folder),
       join(runDir, 'results.jsonl')], { encoding: 'utf8' })
-    const summary = JSON.parse(r.stdout.trim().split('\n').pop() || '{}')
-    const verdict = r.status === 0 ? 'pass' : 'fail'
-    if (verdict === 'fail') anyFailed = true
+    // pass: all tests passed; fail: tests ran, some failed;
+    // error: the runner did not complete, so there are no results to trust.
+    let summary = {}
+    try { summary = JSON.parse(r.stdout.trim().split('\n').pop()) } catch {}
+    const completed = (r.status === 0 || r.status === 1) && typeof summary.tests === 'number'
+    const verdict = !completed ? 'error' : r.status === 0 ? 'pass' : 'fail'
+    if (!completed) summary = { tests: 0, passed: 0, failed: 0, runnerExit: r.status, runnerError: r.stderr.trim() }
+    if (verdict !== 'pass') anyFailed = true
     writeFileSync(join(runDir, 'run.json'), JSON.stringify({
       request: name, run, capability, capabilityCommit: capCommit, tests: testsPath, folder,
       started, finished: new Date().toISOString(), verdict, ...summary,
@@ -93,7 +109,9 @@ for (const name of pending) {
     git(['merge', '-q', '--no-edit', 'main'], { cwd: execWt })
     mkdirSync(join(execWt, 'responses'), { recursive: true })
     writeFileSync(join(execWt, 'responses', `${name}.md`),
-      `# Response: ${name}\n\nVerdict: **${verdict}** — ${summary.passed} of ${summary.tests} tests passed.\n\n` +
+      `# Response: ${name}\n\nVerdict: **${verdict}** — ` +
+      (verdict === 'error' ? `the runner did not complete (exit ${summary.runnerExit}).\n\n`
+        : `${summary.passed} of ${summary.tests} tests passed.\n\n`) +
       `Run \`${run}\` from \`${capability}\` at \`${capCommit.slice(0, 7)}\`.\n\n` +
       `Details: \`${pendingCommit}:pending/${name}/runs/${run}/\`\n`)
     git(['add', '.'], { cwd: execWt })
@@ -105,8 +123,9 @@ for (const name of pending) {
     mergeIntoMain(name, pendingCommit)
     console.log(JSON.stringify({ request: name, run, verdict, ...summary }))
   } finally {
-    git(['worktree', 'prune'])
+    // Remove the folder first, so prune drops worktrees a failure left behind.
     rmSync(work, { recursive: true, force: true })
+    git(['worktree', 'prune'])
   }
 }
 process.exit(anyFailed ? 1 : 0)
