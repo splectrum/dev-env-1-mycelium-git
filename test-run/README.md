@@ -32,6 +32,24 @@ test-run/seed.sh /tmp/runs/r2 mycelium-uri test-mycelium-uri \
   test-run/requests/fail-on-purpose test-run/requests/broken-request
 ```
 
+## Keeping and asking a run
+
+A kept run is a bundle (`git bundle create <file> --all`). To ask it
+something, inflate it, deploy what it needs, put in a request, and execute:
+
+```sh
+test-run/inflate.sh r5.bundle /tmp/runs/r5     # all branches, plus the hook
+test-run/deploy.sh /tmp/runs/r5 mycelium-uri   # new deploy commit on capability/test
+test-run/request.sh /tmp/runs/r5 test-run/requests/report-runs
+/tmp/runs/r5/.git/hooks/execute
+git -C /tmp/runs/r5 show main:responses/report-runs.md
+```
+
+A `Report: runs` request is answered by the deployed `report.js`. It lists
+the branches, each request with its runs and verdicts, and the tests that
+did not pass. The report is kept with the run and is also the body of the
+response.
+
 A run's verdict is `pass` when all tests passed, `fail` when tests ran and
 some failed, and `error` when the runner did not complete.
 
