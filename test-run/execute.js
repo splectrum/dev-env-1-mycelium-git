@@ -1,28 +1,26 @@
 #!/usr/bin/env node
-// Execution hook: checks pending/default for requests not yet answered and
-// executes them from the deployed capability branch.
+// Execute: kicks the repository into action. For each request on
+// pending/default that has no response on main yet, it executes the request
+// from the deployed capability branch and responds on execute/main, merged
+// into main with a plain merge. It records what happened; it does not judge.
 //   node execute.js <repo> [capability-branch]   (default: capability/test)
 //
-// A request is pending/<name>/request.md. Its 'Run:' line names a tests file
-// and the folder to run it from, both in the capability tree:
-//   Run: mycelium-uri/test/commands.txt in mycelium-uri
-// A tests file under pending/ is read from pending/default instead, so a
-// request can bring its own tests:
-//   Run: pending/<name>/tests.txt in mycelium-uri
-// A 'Report:' line asks for a report on the repository's own requests and
-// runs, made by the deployed report.js; the report is the response:
-//   Report: runs
-// A request is answered when main holds responses/<name>.md.
+// A request is pending/<name>/request.md, with one of:
+//   Run: <tests-file> in <folder>   run a list of invocations (runner.js)
+//   Report: runs                    interpret the record (report.js)
+// A tests file under pending/ is read from the request on pending/default,
+// any other path from the capability tree. Run requests execute first, in
+// name order, then Report requests, so a report sees the completed runs.
 //
-// For each pending request:
-// 1. The capability tree is extracted into a temporary folder (the deployed
-//    code is what runs, not main).
-// 2. The runner writes its output, which is committed to pending/default
-//    under pending/<name>/runs/<run>/ (execution data belongs to the request).
-// 3. The response is committed to execute/main, after merging main into it,
-//    and merged into main with a plain merge, referencing the pending commit.
+// The response is main:responses/<name>/:
+//   response.md   what was executed, on which states, and the outcome
+//   unit.json     the unit's record: invocation, states by commit,
+//                 environment and nondeterministic inputs; enough to rerun
+//   results.jsonl (Run) one line per invocation: command, exit, output
+//   report.md     (Report) the report
+// pending/default is not written: it holds the requests only.
 
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { spawnSync } from 'node:child_process'
@@ -34,105 +32,89 @@ if (!repo) {
 }
 
 const git = (args, opts = {}) => {
-  const r = spawnSync('git', args, { cwd: opts.cwd || repo, encoding: 'utf8', input: opts.input })
+  const r = spawnSync('git', args, { cwd: opts.cwd || repo, encoding: 'utf8', maxBuffer: 1 << 30 })
   if (r.status !== 0 && !opts.allowFail) {
     throw new Error(`git ${args.join(' ')}: ${r.stderr.trim()}`)
   }
   return r.status === 0 ? r.stdout.trim() : null
 }
+const exists = spec => git(['cat-file', '-e', spec], { allowFail: true }) !== null
 
 git(['worktree', 'prune'])
-const requests = git(['ls-tree', '-d', '--name-only', 'pending/default:pending']).split('\n').filter(Boolean)
-const pending = requests.filter(name =>
-  git(['cat-file', '-e', `pending/default:pending/${name}/request.md`], { allowFail: true }) !== null &&
-  git(['cat-file', '-e', `main:responses/${name}.md`], { allowFail: true }) === null)
+const pending = git(['ls-tree', '-d', '--name-only', 'pending/default:pending']).split('\n').filter(Boolean)
+  .filter(name => exists(`pending/default:pending/${name}/request.md`) && !exists(`main:responses/${name}`))
+  .map(name => {
+    const text = git(['show', `pending/default:pending/${name}/request.md`])
+    const run = text.match(/^Run:\s*(\S+)\s+in\s+(\S+)\s*$/m)
+    const report = text.match(/^Report:\s*(\S+)\s*$/m)
+    return { name, run, report, line: (run || report || [null])[0] }
+  })
+  .sort((a, b) => (!!a.report - !!b.report) || a.name.localeCompare(b.name))
 
-if (pending.length === 0) {
-  console.log(JSON.stringify({ pending: 0 }))
-  process.exit(0)
-}
+for (const request of pending) execute(request)
+console.log(JSON.stringify({ executed: pending.map(r => r.name) }))
 
-let anyFailed = false
-for (const name of pending) {
-  const request = git(['show', `pending/default:pending/${name}/request.md`])
-  const runLine = request.match(/^Run:\s*(\S+)\s+in\s+(\S+)\s*$/m)
-  const reportLine = request.match(/^Report:\s*(\S+)\s*$/m)
-  if (!runLine && !reportLine) throw new Error(`request ${name} has no 'Run:' or 'Report:' line`)
-  const run = new Date().toISOString().replace(/[:.]/g, '-').toLowerCase()
-  const capCommit = git(['rev-parse', capability])
-  // The unit's record: what was invoked, and every state it ran on, by
-  // commit, taken before anything changes. With these a rerun reproduces it.
-  const unit = {
-    invocation: { request: name, line: (runLine || reportLine)[0] },
-    state: Object.fromEntries(['pending/default', 'main', 'execute/main', capability]
-      .map(b => [b, git(['rev-parse', b])])),
-    environment: { node: process.version, git: git(['--version']), platform: `${process.platform}-${process.arch}` }
-  }
+function execute ({ name, run: runLine, report: reportLine, line }) {
+  const runId = new Date().toISOString().replace(/[:.]/g, '-').toLowerCase()
+  const started = new Date().toISOString()
+  // Every state the unit runs on, by commit, before anything changes.
+  const state = Object.fromEntries(['pending/default', 'main', 'execute/main', capability]
+    .map(b => [b, git(['rev-parse', b])]))
   const work = mkdtempSync(join(tmpdir(), 'execute-'))
+  const unit = {
+    invocation: { request: name, line },
+    state,
+    environment: { node: process.version, git: git(['--version']), platform: `${process.platform}-${process.arch}` },
+    nondeterministic: { run: runId, started, workDir: work }
+  }
 
   try {
-    // 1. Extract the deployed capability tree.
+    // The deployed capability tree is what runs.
     const code = join(work, 'code')
     mkdirSync(code)
-    const archive = spawnSync('git', ['archive', capability], { cwd: repo, maxBuffer: 1 << 30 })
-    if (archive.status !== 0) throw new Error('git archive failed')
-    const untar = spawnSync('tar', ['-x', '-C', code], { input: archive.stdout })
-    if (untar.status !== 0) throw new Error('tar failed')
+    const archive = spawnSync('git', ['archive', state[capability]], { cwd: repo, maxBuffer: 1 << 30 })
+    spawnSync('tar', ['-x', '-C', code], { input: archive.stdout })
 
-    // 2. Run, and commit the output to pending/default.
-    const pendingWt = join(work, 'pending')
-    git(['worktree', 'add', '-q', pendingWt, 'pending/default'])
-    const runDir = join(pendingWt, 'pending', name, 'runs', run)
-    mkdirSync(runDir, { recursive: true })
-    const started = new Date().toISOString()
-    const done = runLine
-      ? runTests(code, work, runDir, runLine[1], runLine[2])
-      : makeReport(code, runDir, reportLine[1])
-    const { verdict, summary } = done
-    if (verdict !== 'pass') anyFailed = true
-    writeFileSync(join(runDir, 'run.json'), JSON.stringify({
-      request: name, run, capability, capabilityCommit: capCommit, ...done.what,
-      started, finished: new Date().toISOString(), verdict, ...summary,
-      runtime: { node: process.version, git: git(['--version']) },
-      unit: { ...unit, nondeterministic: { run, started, workDir: work } }
-    }, null, 2) + '\n')
-    git(['add', '.'], { cwd: pendingWt })
-    git(['commit', '-q', '-m', `Run ${name}: ${verdict}${done.headline ? ', ' + done.headline : ''}\n\n` +
-      `Execution data of request pending/${name}, run from ${capability}@${capCommit.slice(0, 7)}.`],
-    { cwd: pendingWt })
-    const pendingCommit = git(['rev-parse', '--short', 'HEAD'], { cwd: pendingWt })
-    git(['worktree', 'remove', pendingWt])
-
-    // 3. Respond on execute/main, merge into main.
     const execWt = join(work, 'execute')
     git(['worktree', 'add', '-q', execWt, 'execute/main'])
     git(['merge', '-q', '--no-edit', 'main'], { cwd: execWt })
-    mkdirSync(join(execWt, 'responses'), { recursive: true })
-    writeFileSync(join(execWt, 'responses', `${name}.md`),
-      `# Response: ${name}\n\nVerdict: **${verdict}** — ${done.outcome}\n\n` +
-      `Run \`${run}\` from \`${capability}\` at \`${capCommit.slice(0, 7)}\`.\n\n` +
-      `Details: \`${pendingCommit}:pending/${name}/runs/${run}/\`\n` +
-      (done.body ? '\n' + done.body : ''))
+    const out = join(execWt, 'responses', name)
+    mkdirSync(out, { recursive: true })
+
+    let outcome
+    if (!line) {
+      outcome = "not executed: the request has no 'Run:' or 'Report:' line."
+    } else if (runLine) {
+      outcome = runTests(code, work, out, runLine[1], runLine[2])
+    } else {
+      outcome = makeReport(code, out, reportLine[1])
+    }
+
+    unit.nondeterministic.finished = new Date().toISOString()
+    writeFileSync(join(out, 'unit.json'), JSON.stringify(unit, null, 2) + '\n')
+    const report = existsSync(join(out, 'report.md')) ? '\n' + readFileSync(join(out, 'report.md'), 'utf8') : ''
+    writeFileSync(join(out, 'response.md'),
+      `# Response: ${name}\n\n${outcome}\n\n` +
+      `Executed \`${line || '(none)'}\` from \`${capability}\` at \`${state[capability].slice(0, 7)}\`, ` +
+      `on \`pending/default\` at \`${state['pending/default'].slice(0, 7)}\` and \`main\` at \`${state.main.slice(0, 7)}\`. ` +
+      'The unit record is `unit.json`.\n' + report)
     git(['add', '.'], { cwd: execWt })
-    git(['commit', '-q', '-m', `Respond to ${name}: ${verdict}\n\nRequest: ${pendingCommit}:pending/${name}/request.md\n` +
-      `Details: ${pendingCommit}:pending/${name}/runs/${run}/`], { cwd: execWt })
+    git(['commit', '-q', '-m', `Respond to ${name}\n\n${outcome}\n\n` +
+      `Request: ${state['pending/default'].slice(0, 7)}:pending/${name}/request.md`], { cwd: execWt })
     git(['worktree', 'remove', execWt])
 
-    // Plain merge into main, from main's own worktree if it is checked out.
-    mergeIntoMain(name, pendingCommit)
-    console.log(JSON.stringify({ request: name, run, verdict, ...summary }))
+    mergeIntoMain(`Merge execute/main: response to ${name}\n\n` +
+      `Request: ${state['pending/default'].slice(0, 7)}:pending/${name}/request.md`)
   } finally {
     // Remove the folder first, so prune drops worktrees a failure left behind.
     rmSync(work, { recursive: true, force: true })
     git(['worktree', 'prune'])
   }
 }
-process.exit(anyFailed ? 1 : 0)
 
-// Run a tests file through the deployed runner.
-// pass: all tests passed; fail: tests ran, some failed;
-// error: the runner did not complete, so there are no results to trust.
-function runTests (code, work, runDir, testsPath, folder) {
+// Run a list of invocations through the deployed runner; the record is
+// results.jsonl. The outcome says whether the runner completed, nothing more.
+function runTests (code, work, out, testsPath, folder) {
   let testsFile = join(code, testsPath)
   if (testsPath.startsWith('pending/')) {
     // A missing file stays missing, so the runner reports the error.
@@ -141,38 +123,29 @@ function runTests (code, work, runDir, testsPath, folder) {
     if (tests !== null) writeFileSync(testsFile, tests + '\n')
   }
   const r = spawnSync('node', [join(code, 'runner.js'), testsFile, join(code, folder),
-    join(runDir, 'results.jsonl')], { encoding: 'utf8' })
-  let summary = {}
-  try { summary = JSON.parse(r.stdout.trim().split('\n').pop()) } catch {}
-  const completed = (r.status === 0 || r.status === 1) && typeof summary.tests === 'number'
-  const verdict = !completed ? 'error' : r.status === 0 ? 'pass' : 'fail'
-  if (!completed) summary = { tests: 0, passed: 0, failed: 0, runnerExit: r.status, runnerError: r.stderr.trim() }
-  return {
-    verdict, summary, what: { testsFile: testsPath, folder },
-    headline: `${summary.passed}/${summary.tests} passed`,
-    outcome: verdict === 'error' ? `the runner did not complete (exit ${summary.runnerExit}).`
-      : `${summary.passed} of ${summary.tests} tests passed.`
+    join(out, 'results.jsonl')], { encoding: 'utf8' })
+  if (r.status !== 0) {
+    writeFileSync(join(out, 'error.txt'), r.stderr)
+    return `The runner did not complete (exit ${r.status}); its error output is \`error.txt\`.`
   }
+  const { invocations } = JSON.parse(r.stdout.trim().split('\n').pop())
+  return `Executed ${invocations} invocations; the record is \`results.jsonl\`.`
 }
 
-// Report on this repository with the deployed report.js; the report is
-// kept with the run and is the body of the response.
-function makeReport (code, runDir, scope) {
+// Interpret the record with the deployed report.js; the report is report.md.
+function makeReport (code, out, scope) {
   const r = spawnSync('node', [join(code, 'report.js'), repo, scope], { encoding: 'utf8' })
   if (r.status !== 0) {
-    return {
-      verdict: 'error', summary: { reportExit: r.status, reportError: (r.stderr || '').trim() },
-      what: { report: scope }, outcome: `the report could not be made (exit ${r.status}).`
-    }
+    writeFileSync(join(out, 'error.txt'), r.stderr)
+    return `The report could not be made (exit ${r.status}); its error output is \`error.txt\`.`
   }
-  writeFileSync(join(runDir, 'report.md'), r.stdout)
-  return { verdict: 'pass', summary: {}, what: { report: scope }, outcome: 'report made.', body: r.stdout }
+  writeFileSync(join(out, 'report.md'), r.stdout)
+  return 'Report made: `report.md`.'
 }
 
-function mergeIntoMain (name, pendingCommit) {
-  const message = `Merge execute/main: response to ${name}\n\nRequest: ${pendingCommit}:pending/${name}/request.md`
-  const current = git(['symbolic-ref', '--short', '-q', 'HEAD'], { allowFail: true })
-  if (current === 'main') {
+// Plain merge into main, from main's own worktree if it is checked out.
+function mergeIntoMain (message) {
+  if (git(['symbolic-ref', '--short', '-q', 'HEAD'], { allowFail: true }) === 'main') {
     git(['merge', '-q', '--no-ff', '-m', message, 'execute/main'])
     return
   }
@@ -183,6 +156,5 @@ function mergeIntoMain (name, pendingCommit) {
     git(['merge', '-q', '--no-ff', '-m', message, 'execute/main'], { cwd: wt })
   } finally {
     git(['worktree', 'remove', '--force', wt])
-    if (existsSync(wt)) rmSync(wt, { recursive: true, force: true })
   }
 }
