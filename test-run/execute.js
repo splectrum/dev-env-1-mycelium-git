@@ -9,6 +9,9 @@
 // A tests file under pending/ is read from pending/default instead, so a
 // request can bring its own tests:
 //   Run: pending/<name>/tests.txt in mycelium-uri
+// A 'Report:' line asks for a report on the repository's own requests and
+// runs, made by the deployed report.js; the report is the response:
+//   Report: runs
 // A request is answered when main holds responses/<name>.md.
 //
 // For each pending request:
@@ -52,9 +55,9 @@ if (pending.length === 0) {
 let anyFailed = false
 for (const name of pending) {
   const request = git(['show', `pending/default:pending/${name}/request.md`])
-  const m = request.match(/^Run:\s*(\S+)\s+in\s+(\S+)\s*$/m)
-  if (!m) throw new Error(`request ${name} has no 'Run: <tests> in <folder>' line`)
-  const [, testsPath, folder] = m
+  const runLine = request.match(/^Run:\s*(\S+)\s+in\s+(\S+)\s*$/m)
+  const reportLine = request.match(/^Report:\s*(\S+)\s*$/m)
+  if (!runLine && !reportLine) throw new Error(`request ${name} has no 'Run:' or 'Report:' line`)
   const run = new Date().toISOString().replace(/[:.]/g, '-').toLowerCase()
   const capCommit = git(['rev-parse', capability])
   const work = mkdtempSync(join(tmpdir(), 'execute-'))
@@ -74,30 +77,18 @@ for (const name of pending) {
     const runDir = join(pendingWt, 'pending', name, 'runs', run)
     mkdirSync(runDir, { recursive: true })
     const started = new Date().toISOString()
-    let testsFile = join(code, testsPath)
-    if (testsPath.startsWith('pending/')) {
-      // A missing file stays missing, so the runner reports the error.
-      testsFile = join(work, 'tests.txt')
-      const tests = git(['show', `pending/default:${testsPath}`], { allowFail: true })
-      if (tests !== null) writeFileSync(testsFile, tests + '\n')
-    }
-    const r = spawnSync('node', [join(code, 'runner.js'), testsFile, join(code, folder),
-      join(runDir, 'results.jsonl')], { encoding: 'utf8' })
-    // pass: all tests passed; fail: tests ran, some failed;
-    // error: the runner did not complete, so there are no results to trust.
-    let summary = {}
-    try { summary = JSON.parse(r.stdout.trim().split('\n').pop()) } catch {}
-    const completed = (r.status === 0 || r.status === 1) && typeof summary.tests === 'number'
-    const verdict = !completed ? 'error' : r.status === 0 ? 'pass' : 'fail'
-    if (!completed) summary = { tests: 0, passed: 0, failed: 0, runnerExit: r.status, runnerError: r.stderr.trim() }
+    const done = runLine
+      ? runTests(code, work, runDir, runLine[1], runLine[2])
+      : makeReport(code, runDir, reportLine[1])
+    const { verdict, summary } = done
     if (verdict !== 'pass') anyFailed = true
     writeFileSync(join(runDir, 'run.json'), JSON.stringify({
-      request: name, run, capability, capabilityCommit: capCommit, tests: testsPath, folder,
+      request: name, run, capability, capabilityCommit: capCommit, ...done.what,
       started, finished: new Date().toISOString(), verdict, ...summary,
       runtime: { node: process.version, git: git(['--version']) }
     }, null, 2) + '\n')
     git(['add', '.'], { cwd: pendingWt })
-    git(['commit', '-q', '-m', `Run ${name}: ${verdict}, ${summary.passed}/${summary.tests} passed\n\n` +
+    git(['commit', '-q', '-m', `Run ${name}: ${verdict}${done.headline ? ', ' + done.headline : ''}\n\n` +
       `Execution data of request pending/${name}, run from ${capability}@${capCommit.slice(0, 7)}.`],
     { cwd: pendingWt })
     const pendingCommit = git(['rev-parse', '--short', 'HEAD'], { cwd: pendingWt })
@@ -109,11 +100,10 @@ for (const name of pending) {
     git(['merge', '-q', '--no-edit', 'main'], { cwd: execWt })
     mkdirSync(join(execWt, 'responses'), { recursive: true })
     writeFileSync(join(execWt, 'responses', `${name}.md`),
-      `# Response: ${name}\n\nVerdict: **${verdict}** — ` +
-      (verdict === 'error' ? `the runner did not complete (exit ${summary.runnerExit}).\n\n`
-        : `${summary.passed} of ${summary.tests} tests passed.\n\n`) +
+      `# Response: ${name}\n\nVerdict: **${verdict}** — ${done.outcome}\n\n` +
       `Run \`${run}\` from \`${capability}\` at \`${capCommit.slice(0, 7)}\`.\n\n` +
-      `Details: \`${pendingCommit}:pending/${name}/runs/${run}/\`\n`)
+      `Details: \`${pendingCommit}:pending/${name}/runs/${run}/\`\n` +
+      (done.body ? '\n' + done.body : ''))
     git(['add', '.'], { cwd: execWt })
     git(['commit', '-q', '-m', `Respond to ${name}: ${verdict}\n\nRequest: ${pendingCommit}:pending/${name}/request.md\n` +
       `Details: ${pendingCommit}:pending/${name}/runs/${run}/`], { cwd: execWt })
@@ -129,6 +119,46 @@ for (const name of pending) {
   }
 }
 process.exit(anyFailed ? 1 : 0)
+
+// Run a tests file through the deployed runner.
+// pass: all tests passed; fail: tests ran, some failed;
+// error: the runner did not complete, so there are no results to trust.
+function runTests (code, work, runDir, testsPath, folder) {
+  let testsFile = join(code, testsPath)
+  if (testsPath.startsWith('pending/')) {
+    // A missing file stays missing, so the runner reports the error.
+    testsFile = join(work, 'tests.txt')
+    const tests = git(['show', `pending/default:${testsPath}`], { allowFail: true })
+    if (tests !== null) writeFileSync(testsFile, tests + '\n')
+  }
+  const r = spawnSync('node', [join(code, 'runner.js'), testsFile, join(code, folder),
+    join(runDir, 'results.jsonl')], { encoding: 'utf8' })
+  let summary = {}
+  try { summary = JSON.parse(r.stdout.trim().split('\n').pop()) } catch {}
+  const completed = (r.status === 0 || r.status === 1) && typeof summary.tests === 'number'
+  const verdict = !completed ? 'error' : r.status === 0 ? 'pass' : 'fail'
+  if (!completed) summary = { tests: 0, passed: 0, failed: 0, runnerExit: r.status, runnerError: r.stderr.trim() }
+  return {
+    verdict, summary, what: { testsFile: testsPath, folder },
+    headline: `${summary.passed}/${summary.tests} passed`,
+    outcome: verdict === 'error' ? `the runner did not complete (exit ${summary.runnerExit}).`
+      : `${summary.passed} of ${summary.tests} tests passed.`
+  }
+}
+
+// Report on this repository with the deployed report.js; the report is
+// kept with the run and is the body of the response.
+function makeReport (code, runDir, scope) {
+  const r = spawnSync('node', [join(code, 'report.js'), repo, scope], { encoding: 'utf8' })
+  if (r.status !== 0) {
+    return {
+      verdict: 'error', summary: { reportExit: r.status, reportError: (r.stderr || '').trim() },
+      what: { report: scope }, outcome: `the report could not be made (exit ${r.status}).`
+    }
+  }
+  writeFileSync(join(runDir, 'report.md'), r.stdout)
+  return { verdict: 'pass', summary: {}, what: { report: scope }, outcome: 'report made.', body: r.stdout }
+}
 
 function mergeIntoMain (name, pendingCommit) {
   const message = `Merge execute/main: response to ${name}\n\nRequest: ${pendingCommit}:pending/${name}/request.md`

@@ -5,7 +5,7 @@
 # pending/default as they are, next to the module's own request.
 # Run from the dev repository's root. Creates an empty git repo with:
 #   main             README only (the instance's own data starts empty)
-#   capability/test  orphan: <module>/, runner.js and execute.js (the deployment)
+#   capability/test  orphan: <module>/, runner.js, execute.js, report.js (the deployment)
 #   pending/default  orphan: pending/<request>/request.md
 #   execute/main     from main
 # and the execution hook .git/hooks/execute, which runs execute.js as
@@ -43,7 +43,7 @@ git checkout -q --orphan capability/test
 git rm -rq --cached .
 rm -f README.md
 cp -r "$src/$module" "$module"
-cp "$src/test-run/runner.js" "$src/test-run/execute.js" .
+cp "$src/test-run/runner.js" "$src/test-run/execute.js" "$src/test-run/report.js" .
 git add .
 git commit -q -m "Deploy $module into capability/test
 
@@ -70,18 +70,7 @@ git checkout -q main
 git branch execute/main main
 
 # The execution hook: runs execute.js from the deployed capability branch.
-cat > .git/hooks/execute <<'HOOK'
-#!/bin/sh
-# Execution hook: run the pending requests with the deployed execute.js.
-#   .git/hooks/execute [capability-branch]   (default: capability/test)
-set -eu
-repo=$(cd "$(dirname "$0")/../.." && pwd)
-cap=${1:-capability/test}
-tmp=$(mktemp -d)
-trap 'rm -rf "$tmp"' EXIT
-git -C "$repo" show "$cap:execute.js" > "$tmp/execute.mjs"
-node "$tmp/execute.mjs" "$repo" "$cap"
-HOOK
+cp "$src/test-run/hook.sh" .git/hooks/execute
 chmod +x .git/hooks/execute
 
 echo "seeded $dir"
