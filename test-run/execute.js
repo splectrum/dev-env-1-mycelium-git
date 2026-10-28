@@ -60,6 +60,14 @@ for (const name of pending) {
   if (!runLine && !reportLine) throw new Error(`request ${name} has no 'Run:' or 'Report:' line`)
   const run = new Date().toISOString().replace(/[:.]/g, '-').toLowerCase()
   const capCommit = git(['rev-parse', capability])
+  // The unit's record: what was invoked, and every state it ran on, by
+  // commit, taken before anything changes. With these a rerun reproduces it.
+  const unit = {
+    invocation: { request: name, line: (runLine || reportLine)[0] },
+    state: Object.fromEntries(['pending/default', 'main', 'execute/main', capability]
+      .map(b => [b, git(['rev-parse', b])])),
+    environment: { node: process.version, git: git(['--version']), platform: `${process.platform}-${process.arch}` }
+  }
   const work = mkdtempSync(join(tmpdir(), 'execute-'))
 
   try {
@@ -85,7 +93,8 @@ for (const name of pending) {
     writeFileSync(join(runDir, 'run.json'), JSON.stringify({
       request: name, run, capability, capabilityCommit: capCommit, ...done.what,
       started, finished: new Date().toISOString(), verdict, ...summary,
-      runtime: { node: process.version, git: git(['--version']) }
+      runtime: { node: process.version, git: git(['--version']) },
+      unit: { ...unit, nondeterministic: { run, started, workDir: work } }
     }, null, 2) + '\n')
     git(['add', '.'], { cwd: pendingWt })
     git(['commit', '-q', '-m', `Run ${name}: ${verdict}${done.headline ? ', ' + done.headline : ''}\n\n` +

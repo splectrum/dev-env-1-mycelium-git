@@ -12,3 +12,4 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-28-r4.bundle` | Seeded with the self-test requests: pass, fail and error. Seeded from uncommitted changes on top of `2ad897f` |
 | `2026-10-28-r5.bundle` | The same, seeded from committed dev state `d8c969d` |
 | `2026-10-28-r5-report.bundle` | r5 inflated, the report capability deployed, and a `Report: runs` request executed by the run itself |
+| `2026-10-28-r6.bundle` | mycelium-uri without instrumentation; each run records its unit: invocation, states by commit, environment, nondeterministic inputs |
