@@ -146,10 +146,16 @@ through `execute/*` into its `main`.
 - In an instance repository, code exists only in the capability layer.
   Its `main` holds data only. Deployed functionality is never data.
 - The capability layer is organised by capability URI (`state/uri`,
-  `layer/request`, …). That categorisation is internal to the layer: a
-  mapping from capability URIs to the deployed module folders, kept by
-  scripts. It never maps into data, and data never maps into it. External
-  APIs are built on top later.
+  `layer/request`, …). Within the layer, scripts map capability URIs to
+  the deployed module folders.
+- Global capabilities apply everywhere. Non-global (local-scope)
+  capabilities are mapped to data folders, disjointly. An overlay
+  mirrors the data folder structure by `main`'s paths (as
+  `overlay/config` in the rules) and refers to capabilities by URI. The
+  structure is imported into the overlay. Data holds no links to
+  capabilities, and capabilities hold no links to data. The overlay
+  alone relates them.
+- External APIs are built on top later.
 
 ## Request state
 
