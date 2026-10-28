@@ -31,9 +31,13 @@ export function format (segments) {
   return '/' + segments.join('/')
 }
 
-// join('/a', 'b/c', 'd') → '/a/b/c/d'
+// join('/a', 'b/c', 'd') → '/a/b/c/d'. Each part is one or more segments,
+// '/'-separated: no empty segments, no leading or trailing '/'.
 export function join (uri, ...parts) {
-  const extra = parts.flatMap(p => p.split('/')).filter(Boolean)
+  const extra = parts.flatMap(p => {
+    if (typeof p !== 'string') throw new TypeError('parts must be strings')
+    return p.split('/')
+  })
   return format([...parse(uri), ...extra])
 }
 
@@ -52,7 +56,10 @@ export function split (uri, branches) {
   const segments = parse(uri)
   const matches = []
   for (const branch of branches) {
-    const b = parse('/' + branch)
+    if (typeof branch !== 'string' || !branch.split('/').every(isSegment)) {
+      throw new Error(`bad branch name: ${branch}`)
+    }
+    const b = branch.split('/')
     if (b.length > 0 && b.length <= segments.length && b.every((s, i) => s === segments[i])) {
       matches.push({ branch, path: format(segments.slice(b.length)) })
     }
