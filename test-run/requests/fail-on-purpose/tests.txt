@@ -1,0 +1,7 @@
+# right
+ok    node cli.js parse /main
+# wrong expectations
+ok    node cli.js parse main
+error node cli.js parse /main
+# no such command
+ok    no-such-command

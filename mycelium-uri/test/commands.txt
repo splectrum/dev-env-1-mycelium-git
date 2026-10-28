@@ -1,0 +1,28 @@
+# Test commands for mycelium-uri, for a test run.
+# One per line: <expect> <command>, run from mycelium-uri/.
+# <expect> is ok (exit 0) or error (non-zero exit).
+ok    node cli.js isSegment main
+ok    node cli.js isSegment Main
+ok    node cli.js parse /
+ok    node cli.js parse /main/x-1
+error node cli.js parse main
+error node cli.js parse /main/
+error node cli.js parse /a//b
+error node cli.js parse /A
+error node cli.js parse /a?b
+error node cli.js parse /a.txt
+ok    node cli.js isUri /main
+ok    node cli.js isUri main
+ok    node cli.js format main x
+error node cli.js format main X
+ok    node cli.js join /main a/b c
+ok    node cli.js parent /main/a
+ok    node cli.js parent /main
+error node cli.js parent /
+ok    node cli.js split /main main,pending/default
+ok    node cli.js split /main/a/b main,pending/default
+ok    node cli.js split /overlay/config/x main,overlay/config
+ok    node cli.js split /pending/default/pending/phase-1 main,pending/default
+error node cli.js split /other/x main,pending/default
+error node cli.js split /a/b a,a/b
+error node cli.js frobnicate /main

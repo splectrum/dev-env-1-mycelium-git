@@ -38,12 +38,34 @@
 - Proposals, to be tested:
   - Capabilities are global for now: `capability/default` holds the catalogue
     of installed capabilities, by capability URI.
+  - Capability branches are named by purpose, not by library: a
+    capability branch is a deployed environment holding the whole
+    capability layer. The repository name already carries the phase.
   - Local scope is config, in its own overlay: `overlay/config`, by
     `main`'s paths, referring to capabilities by URI.
   - A layer is *local* (a branch here), *imported* (fetched here with its
     history), or *virtual* (resolved from another repository at compose
     time, never stored here). Private config is a virtual layer from the
     private instance repository.
+
+## Development and deployment
+
+- One development repository per phase; each package is a folder on
+  `main` (here `mycelium-uri/`, `mycelium-xpath/`, `mycelium-git/`).
+- The code is developed on `main` as data and deployed as a tree into a
+  `capability/<purpose>` branch to operate.
+- `capability/default` operates this repository's own functionality.
+  `capability/test` is where development deploys and test runs, without
+  touching `capability/default`. More test lanes, if needed, are further
+  `capability/<purpose>` branches (e.g. `capability/test-isogit`).
+- Promotion deploys the tree tested on `capability/test` into
+  `capability/default`. The first deployment is a bootstrap by hand.
+- Code is tested against every git backend; development may start on
+  one (native git, the reference) and add the others.
+- Session branches (`claude/…`) are where a cloud session executes until
+  told to use `execute/<target>`.
+- How branches beyond `main`, `pending/default` and `execute/main` are
+  pushed is settled once development is done.
 
 ## Commit messages
 
@@ -91,5 +113,8 @@ Scope: branch names and repository folders, wherever XPath is used.
 - A name is never both a branch and a prefix.
 
 ## Open
+
+- Execution branch prefix: `execute/<target>` (as here) or
+  `execution/<target>`.
 
 - Whether history may be rewritten to remove leaked data.

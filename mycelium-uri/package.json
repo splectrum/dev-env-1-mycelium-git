@@ -1,0 +1,9 @@
+{
+  "name": "mycelium-uri",
+  "version": "0.1.0",
+  "description": "Our URIs: parse, validate, split at known prefixes",
+  "type": "module",
+  "exports": "./index.js",
+  "scripts": { "test": "node --test test/*.test.js" },
+  "license": "MIT"
+}
