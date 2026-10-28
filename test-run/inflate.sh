@@ -12,10 +12,10 @@ src=$(pwd)
 
 git init -q -b main "$dir"
 cd "$dir"
-git bundle verify -q "$bundle" >/dev/null
+git bundle verify -q "$bundle" 2>/dev/null
 # Every branch of the bundle becomes a local branch, as it was.
-git fetch -q "$bundle" 'refs/heads/*:refs/heads/*'
-git checkout -q main
+git fetch -q --update-head-ok "$bundle" 'refs/heads/*:refs/heads/*'
+git checkout -q -f main
 
 cp "$src/test-run/hook.sh" .git/hooks/execute
 chmod +x .git/hooks/execute
