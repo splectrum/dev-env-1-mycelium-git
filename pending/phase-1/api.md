@@ -113,8 +113,9 @@ it; you put a request in its `pending/default`, and it executes the
 request with its own deployed capabilities. The response comes back
 through `execute/*` into its `main`.
 
-- A kept run is stored here as data: a git bundle at
-  `pending/<request>/runs/<run>.bundle`. It is not a working repository.
+- A kept run is stored as data on `main`, as a git bundle (here in
+  `test-runs/`). It is not a working repository. `pending/default` is the
+  request stack, not the record.
 - To get anything from a stored run, such as its report or a fresh
   analysis:
   1. Inflate the bundle (`git clone --bare`).
@@ -179,9 +180,8 @@ through `execute/*` into its `main`.
 - Links follow the mycelium principle of cascading links. A process
   occurs within a context. The link from the context down to the process
   is authoritative; the link from the process back up is informative.
-  - The dev repository's `pending/default` holds the run bundle, under
-    the request it answers. That link, from context to run, is
-    authoritative.
+  - The dev repository's `main` holds the run bundle as data. That
+    link, from context to run, is authoritative.
   - The run's note on where it was seeded from (a dev commit) is
     informative. It is never needed to establish what ran.
   - Within a repository the same applies: a request on `pending/default`
