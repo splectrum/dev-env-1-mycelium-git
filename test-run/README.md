@@ -34,7 +34,10 @@ test-run/seed.sh /tmp/runs/r2 mycelium-uri test-mycelium-uri \
 
 ## Keeping and asking a run
 
-A kept run is a bundle (`git bundle create <file> --all`). To ask it
+Every run is kept for later review as a bundle, its full self-contained
+record: `test-run/keep.sh <repo> <bundle-file>`. Kept runs go on the dev
+repository's `pending/default`, under the request they belong to
+(`pending/phase-1/runs/`). To ask it
 something, inflate it, deploy what it needs, put in a request, and execute:
 
 ```sh
