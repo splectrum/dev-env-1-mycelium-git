@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { isSegment, isUri, parse, format, join, parent, split, create, memorySink } from '../index.js'
+import { isSegment, isUri, parse, format, join, parent, split } from '../index.js'
 
 test('isSegment', () => {
   for (const s of ['main', 'a-1', '0', 'phase-1']) assert.ok(isSegment(s), s)
@@ -51,24 +51,4 @@ test('split', () => {
   assert.throws(() => split('/other/x', branches), /no branch/)
   assert.throws(() => split('/a/b', ['a', 'a/b']), /overlap/)
   assert.deepEqual(split('/main/x', new Set(['main'])), { branch: 'main', path: '/x' })
-})
-
-test('instrumented: events for calls and errors', () => {
-  const sink = memorySink()
-  const uri = create({ sink })
-  assert.deepEqual(uri.parse('/main/x'), ['main', 'x'])
-  assert.throws(() => uri.parse('bad'))
-  assert.equal(sink.events.length, 2)
-  const [ok, err] = sink.events
-  assert.deepEqual({ ...ok, ms: 0 }, { seq: 0, level: 'uri', op: 'parse', args: ['/main/x'], result: ['main', 'x'], ms: 0 })
-  assert.equal(err.op, 'parse')
-  assert.match(err.error, /not absolute/)
-  assert.equal(err.result, undefined)
-})
-
-test('instrumented: iterables and bytes are summarised', () => {
-  const sink = memorySink()
-  const uri = create({ sink })
-  uri.split('/main/x', new Set(['main']))
-  assert.deepEqual(sink.events[0].args[1], ['main'])
 })

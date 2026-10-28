@@ -22,19 +22,15 @@ Plain functions, which throw on error:
   than one does (the rule that no name is both a branch and a prefix is
   broken)
 
-## Instrumentation
+## Not instrumented
 
-`create({ sink })` returns the same functions, instrumented. Every call
-emits one event to `sink`: `{ seq, level: 'uri', op, args, result | error,
-ms }`. Values are summarised: bytes by size, long strings by length,
-iterables as arrays. `memorySink()` collects events in `sink.events`.
-
-`instrument(fns, { sink, level })` is the wrapper itself. It lives here
-for now; it moves to a shared place when a second package needs it.
+The functions are pure: their result depends only on their arguments. A
+run records the invocation of the unit they are part of, and a rerun
+reproduces every call inside it.
 
 ## Tests
 
 - `npm test`: the unit tests
 - `test/commands.txt`: commands for a test run (`<expect> <command>`),
   most through `cli.js`, which
-  prints the audit events and the outcome as JSON lines
+  prints the outcome as one JSON line
