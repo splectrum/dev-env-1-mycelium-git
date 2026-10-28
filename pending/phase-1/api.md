@@ -170,6 +170,24 @@ through `execute/*` into its `main`.
   move needs no renaming. That would mean `pending/default` receives
   merges, which must be stated in the rules.
 
+## Self-contained repositories and cascading links
+
+- An instance repository, such as a test run, is self-contained. What it
+  ran is inside it: the deployed code on its capability branch, the
+  request, the execution data, the response. It needs no other
+  repository to be read, checked or asked.
+- Links follow the mycelium principle of cascading links. A process
+  occurs within a context. The link from the context down to the process
+  is authoritative; the link from the process back up is informative.
+  - The dev repository's `pending/default` holds the run bundle, under
+    the request it answers. That link, from context to run, is
+    authoritative.
+  - The run's note on where it was seeded from (a dev commit) is
+    informative. It is never needed to establish what ran.
+  - Within a repository the same applies: a request on `pending/default`
+    contains its runs, and the response's reference back to it is
+    informative.
+
 ## Open
 
 - Runtime order: Node first (native git and isomorphic-git), then Bare?
