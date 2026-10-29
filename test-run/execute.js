@@ -72,6 +72,7 @@ async function execute ({ name, run: runLine, report: reportLine, line }) {
     environment: {
       node: process.version,
       git: spawnSync('git', ['--version'], { encoding: 'utf8' }).stdout.trim(),
+      bare: spawnSync('bare', ['--version'], { encoding: 'utf8' }).stdout?.trim() || null,
       platform: `${process.platform}-${process.arch}`
     },
     nondeterministic: { run: runId, started, workDir: work }

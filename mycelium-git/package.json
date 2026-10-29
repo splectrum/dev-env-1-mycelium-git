@@ -9,6 +9,11 @@
   },
   "license": "MIT",
   "dependencies": {
-    "isomorphic-git": "1.44.8"
+    "child_process": "npm:bare-node-child-process@1.0.1",
+    "crypto": "npm:bare-node-crypto@1.0.0",
+    "fs": "npm:bare-node-fs@1.0.2",
+    "isomorphic-git": "1.44.8",
+    "path": "npm:bare-node-path@1.0.1",
+    "process": "npm:bare-node-process@1.0.1"
   }
 }

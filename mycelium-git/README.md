@@ -69,6 +69,12 @@ Adapters, one per engine, each run against the same contract suite
   `mergeTrees` leaves an unreferenced merge commit, which git's garbage
   collection removes.
 
+Both run on Node and on Bare. On Bare the Node built-ins they use come from
+the `bare-node-*` aliases, which are dependencies of this package; Node
+ignores them, since its own built-ins come first. The Bare runtime itself
+is the environment, like Node and git: installed where the module runs
+(`npm install -g bare@1.36.0`), not with the module.
+
 A commit message always ends with a newline, as git's own commits do, so
 the same writes give the same oids on every engine (`test/engines.test.js`).
 
@@ -80,5 +86,6 @@ the same writes give the same oids on every engine (`test/engines.test.js`).
   the fixture (`test/fixture.sh`, fixed dates, so its oids are stable);
   the writes commit as `cli` at a fixed time, so their oids are stable too,
   and each line's state carries on to the next. `test/commands-isogit.txt`
-  is the same on isomorphic-git (`--engine=isogit`), with the same
-  expectations
+  is the same on isomorphic-git (`--engine=isogit`), and
+  `test/commands-bare-native.txt` and `test/commands-bare-isogit.txt` are
+  the same on Bare, all with the same expectations
