@@ -13,6 +13,11 @@ node --input-type=module -e "
 import { intake } from '$src/mycelium-layer/index.js'
 import { nativeBackend } from '$src/mycelium-git/index.js'
 const [repo, folder, name] = process.argv.slice(1)
-await intake({ backend: nativeBackend(repo), folder, name,
-  author: { name: 'test-run', email: 'test-run@localhost' } })" "$repo" "$req" "$(basename "$req")"
+try {
+  await intake({ backend: nativeBackend(repo), folder, name,
+    author: { name: 'test-run', email: 'test-run@localhost' } })
+} catch (err) {
+  console.error(err.message)
+  process.exit(1)
+}" "$repo" "$req" "$(basename "$req")"
 echo "requested $(basename "$req")"
