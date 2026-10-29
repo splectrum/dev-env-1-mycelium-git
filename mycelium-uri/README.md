@@ -9,18 +9,22 @@ branch name, from the root: `/main/x/y`, `/overlay/config/x/y`.
 
 ## API
 
-Plain functions, which throw on error:
+Validation is at the boundary: `validate` where a URI comes in. The other
+functions work on valid values and don't check again.
 
+- `validate(uri)` → the canonical URI. Fixes accepted deviations and
+  throws when the rules are broken. The accepted deviations are empty
+  parts: `//` and a trailing `/`; `''` is the root. So
+  `validate('/main//x/')` → `'/main/x'`
+- `isUri(uri)` → boolean: is it a canonical URI
 - `isSegment(s)` → boolean
-- `isUri(uri)` → boolean
-- `parse(uri)` → segments: `'/a/b'` → `['a', 'b']`, `'/'` → `[]`
+- `parse(uri)` → segments: `'/a/b'` → `['a', 'b']`, `'/'` → `[]`. Strict:
+  it throws on anything not canonical, naming the canonical form
 - `format(segments)` → uri
-- `join(uri, ...parts)` → uri; a part may hold several segments
-  (`a/b`), but no empty ones: no `//`, no leading or trailing `/`
+- `join(uri, ...parts)` → uri; a part may hold several segments (`a/b`)
 - `parent(uri)` → uri; throws for the root
 - `split(uri, branches)` → `{ branch, path }`, where `branches` is any
-  iterable of branch names. Throws on a branch name that breaks the
-  rules, when no branch matches, or when more
+  iterable of branch names. Throws when no branch matches, or when more
   than one does (the rule that no name is both a branch and a prefix is
   broken)
 

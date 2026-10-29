@@ -1,38 +1,53 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { isSegment, isUri, parse, format, join, parent, split } from '../index.js'
+import { isSegment, validate, isUri, parse, format, join, parent, split } from '../index.js'
 
 test('isSegment', () => {
   for (const s of ['main', 'a-1', '0', 'phase-1']) assert.ok(isSegment(s), s)
   for (const s of ['', 'Main', 'a_b', 'a.b', 'a b', 'é', null]) assert.ok(!isSegment(s), String(s))
 })
 
+test('validate: canonical URIs pass unchanged', () => {
+  for (const u of ['/', '/main', '/overlay/config/x-1']) assert.equal(validate(u), u)
+})
+
+test('validate: accepted deviations are fixed', () => {
+  assert.equal(validate(''), '/')
+  assert.equal(validate('//'), '/')
+  assert.equal(validate('/main/'), '/main')
+  assert.equal(validate('/main//x/'), '/main/x')
+  assert.equal(validate('///a///b///'), '/a/b')
+})
+
+test('validate: broken rules throw', () => {
+  for (const bad of ['main', 'main/x', '/A', '/a?b', '/a#b', 'git:/a', '/a.txt', '/a b', '/é']) {
+    assert.throws(() => validate(bad), undefined, bad)
+  }
+  assert.throws(() => validate(42), TypeError)
+})
+
+test('isUri: canonical only', () => {
+  assert.ok(isUri('/main/x'))
+  assert.ok(!isUri('/main/'))
+  assert.ok(!isUri('main/x'))
+})
+
 test('parse', () => {
   assert.deepEqual(parse('/'), [])
   assert.deepEqual(parse('/main'), ['main'])
   assert.deepEqual(parse('/overlay/config/x-1'), ['overlay', 'config', 'x-1'])
-  for (const bad of ['', 'main', '/main/', '//', '/a//b', '/A', '/a?b', '/a#b', 'git:/a', '/a.txt']) {
-    assert.throws(() => parse(bad), undefined, bad)
-  }
-  assert.throws(() => parse(42), TypeError)
-})
-
-test('isUri', () => {
-  assert.ok(isUri('/main/x'))
-  assert.ok(!isUri('main/x'))
+  assert.throws(() => parse('/main/'), /not canonical: \/main\/ \(canonical: \/main\)/)
+  assert.throws(() => parse('main'), /not absolute/)
 })
 
 test('format', () => {
   assert.equal(format([]), '/')
   assert.equal(format(['main', 'x']), '/main/x')
-  assert.throws(() => format(['main', 'X']))
 })
 
 test('join', () => {
   assert.equal(join('/', 'main'), '/main')
   assert.equal(join('/main', 'a/b', 'c'), '/main/a/b/c')
-  assert.throws(() => join('/main', 'A'))
-  for (const bad of ['', 'a//b', '/a', 'a/']) assert.throws(() => join('/main', bad), undefined, bad)
 })
 
 test('parent', () => {
@@ -52,7 +67,4 @@ test('split', () => {
   assert.throws(() => split('/other/x', branches), /no branch/)
   assert.throws(() => split('/a/b', ['a', 'a/b']), /overlap/)
   assert.deepEqual(split('/main/x', new Set(['main'])), { branch: 'main', path: '/x' })
-  for (const bad of ['Feature_X', 'a//b', '/main', '']) {
-    assert.throws(() => split('/main/x', ['main', bad]), /bad branch name/, bad)
-  }
 })
