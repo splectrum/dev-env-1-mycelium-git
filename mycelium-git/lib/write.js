@@ -1,7 +1,8 @@
 // Writing under the rules: a change is a set of puts and removes on one
-// branch, committed as one checkpoint; a merge is a plain merge. Refs move
-// only by compare-and-swap, so history only grows and a concurrent change
-// fails instead of being overwritten.
+// branch, committed as one checkpoint; a merge is a plain merge; branches
+// are created and deleted only as the rules allow. Refs move only by
+// compare-and-swap, so history only grows and a concurrent change fails
+// instead of being overwritten.
 //
 // Paths are inside the branch ('/responses/r1/response.md'), stored names,
 // valid: they are validated at the boundary, not here.
@@ -9,10 +10,61 @@
 const BLOB = '100644'
 const TREE = '040000'
 
+// First segments of layers, which start as orphans. execute and publish
+// branches are derived from another branch, not created as layers.
+const LAYERS = ['main', 'pending', 'overlay', 'data', 'capability']
+// Permanent: never deleted.
+const PERMANENT = ['main', 'pending/default']
+
 export function writer (backend) {
-  const head = async branch => Object.fromEntries(await backend.listBranches())[branch]
+  const branches = async () => Object.fromEntries(await backend.listBranches())
+  const head = async branch => (await branches())[branch]
+
+  // A new branch name must not be, or be under, or hold, an existing one:
+  // a name is never both a branch and a prefix.
+  async function free (name) {
+    for (const existing of Object.keys(await branches())) {
+      if (existing === name) throw new Error(`exists: ${name}`)
+      if (name.startsWith(existing + '/') || existing.startsWith(name + '/')) {
+        throw new Error(`not a leaf: ${name} and ${existing}`)
+      }
+    }
+  }
 
   return {
+    // A new layer: an orphan branch whose first commit has an empty tree.
+    // Its first segment must be a layer's (main is a layer of its own).
+    async createLayer (name, message, { author, time } = {}) {
+      const first = name.split('/')[0]
+      if (!LAYERS.includes(first)) throw new Error(`not a layer: ${name}`)
+      if (first === 'main' ? name !== 'main' : name === first) throw new Error(`not a layer: ${name}`)
+      await free(name)
+      const tree = await backend.writeTree([])
+      const oid = await backend.writeCommit({ tree, parents: [], message, author, time })
+      await backend.updateBranch(name, oid, null)
+      return oid
+    },
+
+    // The execution branch of a target: execute/<target>, from its head.
+    async createExecution (target) {
+      const from = await head(target)
+      if (!from) throw new Error(`no branch: ${target}`)
+      const name = `execute/${target}`
+      await free(name)
+      await backend.updateBranch(name, from, null)
+      return from
+    },
+
+    // Delete a branch, only once it is merged: its head is in into's history.
+    async deleteBranch (name, into) {
+      if (PERMANENT.includes(name)) throw new Error(`permanent: ${name}`)
+      const b = await branches()
+      if (!b[name]) throw new Error(`no branch: ${name}`)
+      if (!b[into]) throw new Error(`no branch: ${into}`)
+      if (!await backend.isAncestor(b[name], b[into])) throw new Error(`not merged: ${name} into ${into}`)
+      await backend.deleteBranch(name, b[name])
+    },
+
     // Start a change on a branch. put(path, bytes) and remove(path) collect;
     // commit(message, { author, time }) writes it as one commit.
     async change (branch) {

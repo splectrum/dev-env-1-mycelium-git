@@ -1,6 +1,6 @@
 # Test commands for mycelium-git on native git, for a test run, run from
-# mycelium-git/. The other commands-*.txt are the same on other engines and
-# runtimes, with the same expectations.
+# mycelium-git/. test/variants.js generates commands-*.txt from it: the same
+# on other engines and runtimes, with the same expectations.
 # One invocation per line: <command> <arg>... => <expectation>
 # The first line builds the test repository, with stable oids.
 sh test/fixture.sh fixture => exit 0
@@ -45,3 +45,23 @@ node cli.js merge fixture execute/main main => {"result":"9bd737dc56da4f4f0c3dc6
 node cli.js read fixture /main/responses/r1.md => {"result":"done"}
 node cli.js merge fixture execute/main main => {"result":"9bd737dc56da4f4f0c3dc689b0175f9dd54079b6"}
 node cli.js merge fixture main execute/main => {"result":"0b2f9262b2a127d5b3cf6e7eec229e3c9f502668"}
+# Branches and layers.
+node cli.js create-layer fixture data/sets => {"result":"a9aad9fa479b3a0c38cd3d828107164f86a9a273"}
+node cli.js select fixture /data/sets/* => {"result":[]}
+node cli.js put fixture data/sets /one.md one => {"result":"5ed9f09eddd895320e122c4646bc34cab1d5cb94"}
+node cli.js create-layer fixture data/sets => {"error":"exists: data/sets"}
+node cli.js create-layer fixture data/sets/more => {"error":"not a leaf: data/sets/more and data/sets"}
+node cli.js create-layer fixture overlay => {"error":"not a layer: overlay"}
+node cli.js create-layer fixture execute/main => {"error":"not a layer: execute/main"}
+node cli.js create-layer fixture other/x => {"error":"not a layer: other/x"}
+node cli.js create-layer fixture Data/Two => {"result":"0841bd35a94830f04cbd4173d85bf9019e5ccbc3"}
+node cli.js create-execution fixture data/sets => {"result":"5ed9f09eddd895320e122c4646bc34cab1d5cb94"}
+node cli.js create-execution fixture data/sets => {"error":"exists: execute/data/sets"}
+node cli.js put fixture execute/data/sets /two.md two => {"result":"3bfd39082d0ae082ad6cdd23c1c5907809ec53dc"}
+node cli.js delete fixture execute/data/sets data/sets => {"error":"not merged: execute/data/sets into data/sets"}
+node cli.js merge fixture execute/data/sets data/sets => {"result":"e2981af449af98124dc85d84c1f9354ddafcc216"}
+node cli.js delete fixture execute/data/sets data/sets => {"result":null}
+node cli.js select fixture /data/* => {"result":[["/data/sets",{"type":"tree","oid":"a7fd516d3499dd84ecaaaf3b7ede41820c597f62"}],["/data/two",{"type":"tree","oid":"4b825dc642cb6eb9a060e54bf8d69288fbee4904"}]]}
+node cli.js read fixture /data/sets/two.md => {"result":"two"}
+node cli.js delete fixture main execute/main => {"error":"permanent: main"}
+node cli.js delete fixture data/a_b main => {"error":"bad segment 'a_b' in /data/a_b"}
