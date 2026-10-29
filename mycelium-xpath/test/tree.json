@@ -1,0 +1,9 @@
+{
+  "main": {
+    "readme": "hello",
+    "docs": { "a": "A", "b": "B" },
+    "src": { "a": "srcA", "lib": { "x": "X" } }
+  },
+  "overlay": { "config": { "docs": { "a": "conf" } } },
+  "empty": {}
+}
