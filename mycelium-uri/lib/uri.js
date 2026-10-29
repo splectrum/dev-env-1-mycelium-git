@@ -2,6 +2,8 @@
 // A segment is a name of [a-z0-9-], with optional '.'-separated extensions
 // of the same characters: at this level a leaf is an object, and its name
 // includes its extension. Every URI starts with a branch name, from the root.
+// URIs are case-insensitive: the canonical form is lowercase, and names keep
+// their own case where they are stored.
 //
 // Validation is at the boundary: validate() (or parse) where a URI comes
 // in. The other functions work on valid values and don't check again.
@@ -14,13 +16,14 @@ export function isSegment (s) {
 
 // The boundary: returns the URI in its canonical form, fixing accepted
 // deviations, and throws when the rules are broken.
-// Accepted deviations: empty parts ('//', a trailing '/'); '' is the root.
-//   validate('/main//x/') → '/main/x'
+// Accepted deviations: uppercase, which folds to lowercase; empty parts ('//',
+// a trailing '/'); '' is the root.
+//   validate('/Main//README.md/') → '/main/readme.md'
 // With { star: true } a step may also be '*', for paths that select.
 export function validate (uri, { star = false } = {}) {
   if (typeof uri !== 'string') throw new TypeError('uri must be a string')
   if (uri !== '' && !uri.startsWith('/')) throw new Error(`not absolute: ${uri}`)
-  const segments = uri.split('/').filter(s => s !== '')
+  const segments = uri.toLowerCase().split('/').filter(s => s !== '')
   for (const s of segments) {
     if (!isSegment(s) && !(star && s === '*')) throw new Error(`bad segment '${s}' in ${uri}`)
   }

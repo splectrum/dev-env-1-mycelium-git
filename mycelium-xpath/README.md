@@ -6,7 +6,9 @@ through `children(node)`, which returns a node's children as
 git tree is.
 
 Paths are `/`-separated from the root, and valid: they are validated at
-the boundary (`mycelium-uri`), not here. A `*` step matches every child.
+the boundary (`mycelium-uri`), not here, so they are lowercase. Names
+match without regard to case: `/main/readme.md` finds a stored
+`README.md`, returned with its own name. A `*` step matches every child.
 
 ## API
 

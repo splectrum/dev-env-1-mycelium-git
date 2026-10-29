@@ -1,6 +1,7 @@
 {
   "main": {
     "readme": "hello",
+    "README.md": "convention",
     "docs": { "a": "A", "b": "B" },
     "src": { "a": "srcA", "lib": { "x": "X" } }
   },

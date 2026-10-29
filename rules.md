@@ -114,6 +114,11 @@ Scope: branch names and repository folders, wherever XPath is used.
   optional `.`-separated extensions of the same characters
   (`request.md`). At this level a leaf is an object, and its storage
   format is part of its name.
+- URIs are case-insensitive. A URI coming in is validated into its
+  canonical, lowercase form and selected; names keep their own case where
+  they are stored (`README.md`, by convention), and the requester gets the
+  object as stored. So no two names in one folder may differ only by
+  case.
 - A name is never both a branch and a prefix.
 
 ## Open

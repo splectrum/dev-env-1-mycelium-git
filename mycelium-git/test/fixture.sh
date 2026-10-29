@@ -11,7 +11,7 @@ git init -q -b main "$dir"
 cd "$dir"
 blob() { printf '%s' "$1" | git hash-object -w --stdin; }
 docs=$(printf '100644 blob %s\ta\n100644 blob %s\tb\n' "$(blob A)" "$(blob B)" | git mktree)
-main=$(printf '100644 blob %s\treadme\n040000 tree %s\tdocs\n' "$(blob hello)" "$docs" | git mktree)
+main=$(printf '100644 blob %s\treadme\n100644 blob %s\tREADME.md\n040000 tree %s\tdocs\n' "$(blob hello)" "$(blob convention)" "$docs" | git mktree)
 git update-ref refs/heads/main "$(git commit-tree "$main" -m main)"
 r1=$(printf '100644 blob %s\trequest.md\n' "$(blob '# Request: r1')" | git mktree)
 pend=$(printf '040000 tree %s\tr1\n' "$r1" | git mktree)

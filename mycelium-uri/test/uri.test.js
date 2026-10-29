@@ -19,11 +19,12 @@ test('validate: accepted deviations are fixed', () => {
   assert.equal(validate('/main/'), '/main')
   assert.equal(validate('/main//x/'), '/main/x')
   assert.equal(validate('///a///b///'), '/a/b')
+  assert.equal(validate('/Main/README.md'), '/main/readme.md')
 })
 
 test('validate: broken rules throw', () => {
   assert.equal(validate('/pending/default/pending/r1/request.md'), '/pending/default/pending/r1/request.md')
-  for (const bad of ['main', 'main/x', '/A', '/a?b', '/a#b', 'git:/a', '/a b', '/é', '/.git', '/a/..', '/a.']) {
+  for (const bad of ['main', 'main/x', '/a?b', '/a#b', 'git:/a', '/a b', '/é', '/.git', '/a/..', '/a.']) {
     assert.throws(() => validate(bad), undefined, bad)
   }
   assert.throws(() => validate(42), TypeError)
@@ -47,6 +48,7 @@ test('parse', () => {
   assert.deepEqual(parse('/overlay/config/x-1'), ['overlay', 'config', 'x-1'])
   assert.throws(() => parse('/main/'), /not canonical: \/main\/ \(canonical: \/main\)/)
   assert.throws(() => parse('main'), /not absolute/)
+  assert.throws(() => parse('/README.md'), /not canonical: \/README.md \(canonical: \/readme.md\)/)
 })
 
 test('format', () => {
