@@ -3,8 +3,10 @@
 Our URIs: parse, validate, split at known prefixes. Generic: no git, no
 dependencies.
 
-A URI is absolute, `/`-separated, with segments of lowercase `a-z`,
-`0-9` and `-`; no scheme, query or fragment. Every URI starts with a
+A URI is absolute and `/`-separated, with no scheme, query or fragment. A
+segment is a name of lowercase `a-z`, `0-9` and `-`, with optional
+`.`-separated extensions of the same characters (`request.md`). At this
+level a leaf is an object, and its name includes its extension. Every URI starts with a
 branch name, from the root: `/main/x/y`, `/overlay/config/x/y`.
 
 ## API

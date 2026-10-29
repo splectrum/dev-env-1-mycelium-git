@@ -110,6 +110,10 @@ Scope: branch names and repository folders, wherever XPath is used.
   or fragment.
 - Segments, for branches and folders alike: lowercase `a-z`, `0-9`, `-`.
   Any folder can then become a branch, and the other way round.
+- A file's segment includes its extension: a name as above, then
+  optional `.`-separated extensions of the same characters
+  (`request.md`). At this level a leaf is an object, and its storage
+  format is part of its name.
 - A name is never both a branch and a prefix.
 
 ## Open

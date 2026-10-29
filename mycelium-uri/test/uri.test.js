@@ -3,8 +3,10 @@ import assert from 'node:assert/strict'
 import { isSegment, validate, isUri, parse, format, join, parent, split } from '../index.js'
 
 test('isSegment', () => {
-  for (const s of ['main', 'a-1', '0', 'phase-1']) assert.ok(isSegment(s), s)
-  for (const s of ['', 'Main', 'a_b', 'a.b', 'a b', 'é', null]) assert.ok(!isSegment(s), String(s))
+  for (const s of ['main', 'a-1', '0', 'phase-1', 'request.md', 'a.tar.gz']) assert.ok(isSegment(s), s)
+  for (const s of ['', 'Main', 'a_b', 'a b', 'é', '.gitignore', 'a.', 'a..b', '.', '..', 'README.md', null]) {
+    assert.ok(!isSegment(s), String(s))
+  }
 })
 
 test('validate: canonical URIs pass unchanged', () => {
@@ -20,7 +22,8 @@ test('validate: accepted deviations are fixed', () => {
 })
 
 test('validate: broken rules throw', () => {
-  for (const bad of ['main', 'main/x', '/A', '/a?b', '/a#b', 'git:/a', '/a.txt', '/a b', '/é']) {
+  assert.equal(validate('/pending/default/pending/r1/request.md'), '/pending/default/pending/r1/request.md')
+  for (const bad of ['main', 'main/x', '/A', '/a?b', '/a#b', 'git:/a', '/a b', '/é', '/.git', '/a/..', '/a.']) {
     assert.throws(() => validate(bad), undefined, bad)
   }
   assert.throws(() => validate(42), TypeError)

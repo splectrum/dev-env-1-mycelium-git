@@ -1,10 +1,12 @@
-// Our URIs: absolute, '/'-separated segments of [a-z0-9-], no scheme,
-// query or fragment. Every URI starts with a branch name, from the root.
+// Our URIs: absolute, '/'-separated segments, no scheme, query or fragment.
+// A segment is a name of [a-z0-9-], with optional '.'-separated extensions
+// of the same characters: at this level a leaf is an object, and its name
+// includes its extension. Every URI starts with a branch name, from the root.
 //
 // Validation is at the boundary: validate() (or parse) where a URI comes
 // in. The other functions work on valid values and don't check again.
 
-const SEGMENT = /^[a-z0-9-]+$/
+const SEGMENT = /^[a-z0-9-]+(\.[a-z0-9-]+)*$/
 
 export function isSegment (s) {
   return typeof s === 'string' && SEGMENT.test(s)
