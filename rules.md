@@ -114,12 +114,12 @@ Scope: branch names and repository folders, wherever XPath is used.
   optional `.`-separated extensions of the same characters
   (`request.md`). At this level a leaf is an object, and its storage
   format is part of its name.
+- Inside our repositories every name is lowercase, files included.
+  Uppercase names are external (`README.md`, by convention elsewhere).
 - URIs are case-insensitive. A URI coming in is validated into its
-  canonical, lowercase form and selected; names keep their own case where
-  they are stored (`README.md`, by convention), and the requester gets the
-  object as stored. So no two names in one folder may differ only by
-  case. That lookup is the boundary's process; inside, paths are stored
-  names and match exactly.
+  canonical, lowercase form and selected; external content keeps its own
+  case, and the requester gets the object as stored. That lookup is the
+  boundary's process; inside, paths match exactly.
 - A name is never both a branch and a prefix.
 
 ## Open

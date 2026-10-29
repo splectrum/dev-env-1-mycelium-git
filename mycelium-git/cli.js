@@ -10,9 +10,9 @@
 //
 // Arguments come in from outside, so this is the boundary. A path to read
 // or select is validated, then selected with sameName to find the stored
-// names. A path to write is validated: its folders take their canonical,
-// lowercase form, and the file name is stored as written, keeping its case.
-// A branch name is validated as a URI.
+// names. A path to write is validated and written in its canonical,
+// lowercase form: inside our repositories every name is lowercase. A branch
+// name is validated as a URI.
 
 import { validate, sameName } from '../mycelium-uri/index.js'
 import { nativeBackend, openRepo, writer } from './index.js'
@@ -20,10 +20,7 @@ import { nativeBackend, openRepo, writer } from './index.js'
 const [op, dir, ...args] = process.argv.slice(2)
 const commit = { author: { name: 'cli', email: 'cli@localhost' }, time: '2026-01-02T00:00:00Z' }
 const branch = name => validate('/' + name).slice(1)
-const writePath = path => {
-  const folders = validate(path).split('/').slice(0, -1)
-  return [...folders, path.split('/').filter(Boolean).pop()].join('/')
-}
+const writePath = path => validate(path)
 
 const ops = {
   select: async (repo, path) => repo.select(validate(path, { star: true }), sameName),

@@ -8,9 +8,10 @@ segment is a name of lowercase `a-z`, `0-9` and `-`, with optional
 `.`-separated extensions of the same characters (`request.md`). At this
 level a leaf is an object, and its name includes its extension.
 
-URIs are case-insensitive. The canonical form is lowercase; names keep
-their own case where they are stored (`README.md`), and a URI in any case
-finds them. So no two names in one folder may differ only by case. Every URI starts with a
+URIs are case-insensitive, and the canonical form is lowercase. Inside our
+repositories every name is lowercase, files included. External content may
+keep its own case (`README.md`), and a URI in any case finds it through
+the boundary's lookup (`sameName`). Every URI starts with a
 branch name, from the root: `/main/x/y`, `/overlay/config/x/y`.
 
 ## API
