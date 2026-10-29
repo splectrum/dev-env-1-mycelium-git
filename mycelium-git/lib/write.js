@@ -121,6 +121,17 @@ export function writer (backend) {
       }
     },
 
+    // A checkpoint replacing a branch's whole tree with tree, whose objects
+    // are already here: one commit on the branch's head. A deployment, for
+    // example.
+    async commitTree (branch, tree, message, { author, time } = {}) {
+      const start = await head(branch)
+      if (!start) throw new Error(`no branch: ${branch}`)
+      const oid = await backend.writeCommit({ tree, parents: [start], message, author, time })
+      await backend.updateBranch(branch, oid, start)
+      return oid
+    },
+
     // Plain merge of branch from into branch into, as a merge commit. Nothing
     // to do if into already holds from. With fastForward, into simply moves
     // to from when it can (for syncing an execution branch; never for main).

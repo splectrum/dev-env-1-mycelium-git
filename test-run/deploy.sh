@@ -1,5 +1,6 @@
 #!/bin/sh
-# Deploy into an instance: the capability branch's tree becomes every module
+# Deploy into an instance, with layer/deploy (mycelium-layer): the capability
+# branch's tree becomes every module
 # folder (mycelium-*), from the dev repository's current commit, and the run
 # machinery (with the kick, hook.sh, and its package.json as machinery.json),
 # from its pinned validated version, as one commit. Creates the
@@ -32,10 +33,18 @@ cp "$from/package.json" "$stage/machinery.json"
 ids() { sed -n 's/.*"id": "\(.*\)".*/\1/p' "$1"; }
 modules=$(cd "$stage" && for m in mycelium-*; do echo "$m $(ids "$m/package.json")"; done)
 machinery_id=$(ids "$stage/machinery.json")
-commit=$("$src/test-run/commit-dir.sh" "$repo" "$cap" "$stage" . "Deploy into $cap
+message="Deploy into $cap
 
 $modules
 machinery $machinery_id
 
-From dev commit $source_commit.")
+From dev commit $source_commit."
+# The staged folder deployed as one commit on the layer (layer/deploy).
+commit=$(node --input-type=module -e "
+import { deploy } from '$src/mycelium-layer/index.js'
+import { nativeBackend } from '$src/mycelium-git/index.js'
+const [repo, layer, folder, message] = process.argv.slice(1)
+const r = await deploy({ backend: nativeBackend(repo), layer, folder, message,
+  author: { name: 'test-run', email: 'test-run@localhost' } })
+console.log(r.commit)" "$repo" "$cap" "$stage" "$message")
 echo "deployed $cap $(echo "$commit" | cut -c1-7)"
