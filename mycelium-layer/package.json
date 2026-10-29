@@ -1,0 +1,14 @@
+{
+  "name": "mycelium-layer",
+  "id": "dd5ab7b3-e59f-4290-9a83-c40f8a3e86b2",
+  "description": "Layer capabilities on mycelium-git: import, and later deploy, extract and export",
+  "type": "module",
+  "exports": "./index.js",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "process": "npm:bare-node-process@1.0.1"
+  }
+}

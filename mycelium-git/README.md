@@ -46,6 +46,10 @@ stored names, valid when they come in.
   branch whose first commit has an empty tree. Its first segment must be a
   layer's: `main` (on its own), `pending`, `overlay`, `data` or
   `capability`. `execute` and `publish` branches are derived, not layers.
+- `importLayer(name, commit)`: a layer taken in from another repository,
+  once its objects are here (`transfer`). New, it follows the layer rules;
+  existing, it only moves forward, so the new commit must hold the
+  current one in its history.
 - `createExecution(target)`: `execute/<target>`, from the target's head.
 - `deleteBranch(name, into)`: only once merged, with its head in `into`'s
   history. `main` and `pending/default` are permanent.
@@ -54,11 +58,20 @@ stored names, valid when they come in.
 - Refs move only by compare-and-swap. History only grows, and a
   concurrent change fails instead of being overwritten.
 
+## Between repositories
+
+`transfer(from, to, commit)` copies everything a commit reaches from one
+backend into another, whatever their engines, and resolves the number of
+objects copied. Objects are content-addressed, so each arrives under the
+same oid. One the target already has is skipped, with what it reaches.
+
 ## Backend contract
 
 - Reading: `listBranches()` → `[name, commit]` pairs;
   `readCommit(oid)` → `{ tree, parents, message }`; `readTree(oid)` →
   entries `{ name, mode, type, oid }`; `readBlob(oid)` → bytes
+- Raw objects: `readObject(oid)` → `{ type, object }`; `hasObject(oid)`;
+  `writeObject(type, bytes)` → oid
 - Writing: `writeBlob(bytes)`, `writeTree(entries)`,
   `writeCommit({ tree, parents, message, author, time })` → oid;
   `updateBranch(name, oid, expected)`, compare-and-swap (`null`: must not
