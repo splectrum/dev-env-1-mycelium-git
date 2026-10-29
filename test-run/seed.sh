@@ -4,7 +4,7 @@
 # Run from the dev repository's root, from a committed state. Creates:
 #   main             README only (the instance's own data starts empty)
 #   capability/test  every module (mycelium-*) and the run machinery
-#   pending/default  a request test-<module> per module with test/commands.txt,
+#   pending/default  a request per tests file (test/commands*.txt) of each module,
 #                    then the given request dirs (e.g. test-run/requests/report-runs)
 #   execute/main     from main
 # as a bare repository (no working tree), with the kick hooks/execute, which
@@ -29,12 +29,15 @@ Bootstrap by hand from dev commit $source_commit." >/dev/null
 
 "$src/test-run/deploy.sh" "$dir" >/dev/null
 
-for module in $(cd "$src" && ls -d mycelium-*); do
-  [ -f "$src/$module/test/commands.txt" ] || continue
-  mkdir "$stage/test-$module"
-  printf '# Request: test-%s\n\nRun the test commands of %s.\n\nRun: %s/test/commands.txt in %s\n' \
-    "$module" "$module" "$module" "$module" > "$stage/test-$module/request.md"
-  "$src/test-run/request.sh" "$dir" "$stage/test-$module" >/dev/null
+# A request per tests file: test/commands.txt is test-<module>,
+# test/commands-<variant>.txt is test-<module>-<variant>.
+for tests in $(cd "$src" && ls mycelium-*/test/commands*.txt); do
+  module=${tests%%/*}
+  variant=$(basename "$tests" .txt | sed -n 's/^commands-//p')
+  name=test-$module${variant:+-$variant}
+  mkdir "$stage/$name"
+  printf '# Request: %s\n\nRun %s.\n\nRun: %s in %s\n' "$name" "$tests" "$tests" "$module" > "$stage/$name/request.md"
+  "$src/test-run/request.sh" "$dir" "$stage/$name" >/dev/null
 done
 for req in "$@"; do "$src/test-run/request.sh" "$dir" "$src/$req" >/dev/null; done
 

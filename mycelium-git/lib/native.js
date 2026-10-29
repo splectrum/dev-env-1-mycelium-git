@@ -71,8 +71,10 @@ export function nativeBackend (dir) {
       return (await git(['mktree', '-z'], { input })).trim()
     },
 
-    // author: { name, email }; time: ISO string, or now.
+    // author: { name, email }; time: ISO string, or now. A message always
+    // ends with a newline, as git's own commits do.
     async writeCommit ({ tree, parents, message, author, time }) {
+      if (!message.endsWith('\n')) message += '\n'
       const env = {
         GIT_AUTHOR_NAME: author.name, GIT_AUTHOR_EMAIL: author.email,
         GIT_COMMITTER_NAME: author.name, GIT_COMMITTER_EMAIL: author.email,

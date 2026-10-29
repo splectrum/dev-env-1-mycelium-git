@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // Command line for mycelium-git, the test entry point.
+//   node cli.js [--engine=isogit] <op> ...           (default engine: native)
 //   node cli.js select <repo> <path>                [path, node] pairs
 //   node cli.js read <repo> <path>                  the file's content, as text
 //   node cli.js put <repo> <branch> <path> <text>   one put, committed
@@ -15,9 +16,12 @@
 // name is validated as a URI.
 
 import { validate, sameName } from '../mycelium-uri/index.js'
-import { nativeBackend, openRepo, writer } from './index.js'
+import { nativeBackend, isogitBackend, openRepo, writer } from './index.js'
 
-const [op, dir, ...args] = process.argv.slice(2)
+const argv = process.argv.slice(2)
+const engine = argv[0] && argv[0].startsWith('--engine=') ? argv.shift().slice(9) : 'native'
+const [op, dir, ...args] = argv
+const engines = { native: nativeBackend, isogit: isogitBackend }
 const commit = { author: { name: 'cli', email: 'cli@localhost' }, time: '2026-01-02T00:00:00Z' }
 const branch = name => validate('/' + name).slice(1)
 const writePath = path => validate(path)
@@ -40,8 +44,9 @@ const ops = {
 }
 
 try {
+  if (!(engine in engines)) throw new Error(`unknown engine: ${engine}`)
   if (!(op in ops)) throw new Error(`unknown op: ${op}`)
-  const backend = nativeBackend(dir)
+  const backend = engines[engine](dir)
   const repo = openRepo(backend)
   const result = op === 'select' || op === 'read'
     ? await ops[op](repo, ...args)

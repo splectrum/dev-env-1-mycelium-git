@@ -35,3 +35,4 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r26.bundle` | All names inside lowercase, files included; new ids for mycelium-uri and mycelium-git: 92 of 92 met |
 | `2026-10-29-r27.bundle` | The first bare instance (no working tree), machinery in development: identical to r26 in report, records, files and history |
 | `2026-10-29-r28.bundle` | Bare instance, machinery pinned at `90ea965c-8ab2-4d17-a8c6-6687e4132702`: all met; inflated bare and asked again |
+| `2026-10-29-r29.bundle` | mycelium-git on native git and isomorphic-git: the same 41 invocations and expectations on each, 133 of 133 met. Carries isomorphic-git and its dependencies |

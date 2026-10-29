@@ -1,0 +1,46 @@
+# Test commands for mycelium-git on isomorphic-git: commands.txt with
+# --engine=isogit, and the same expectations.
+# One invocation per line: <command> <arg>... => <expectation>
+# The first line builds the test repository, with stable oids.
+sh test/fixture.sh fixture => exit 0
+node cli.js --engine=isogit select fixture /* => {"result":[["/execute",{"type":"branches","prefix":"execute/"}],["/main",{"type":"tree","oid":"8255a8aef576dc4794a530c47dc3e45aa42a3403"}],["/overlay",{"type":"branches","prefix":"overlay/"}],["/pending",{"type":"branches","prefix":"pending/"}]]}
+node cli.js --engine=isogit select fixture /*/* => {"result":[["/execute/main",{"type":"tree","oid":"8255a8aef576dc4794a530c47dc3e45aa42a3403"}],["/main/README.md",{"type":"blob","oid":"c73a75548372203286bac9fe4010e7b0f9d1e814"}],["/main/docs",{"type":"tree","oid":"a8d705f02f6f3fde0476c946f5f22cc5fb58238c"}],["/main/readme",{"type":"blob","oid":"b6fc4c620b67d95f953a5c1c1230aaab5db5a1b0"}],["/overlay/config",{"type":"tree","oid":"c5ecd13f53fb1529c8438469d7bb261b5640733a"}],["/pending/default",{"type":"tree","oid":"b3175c7bc5d9a9eeb7db3c7ea0a4a34f4b09aca9"}]]}
+node cli.js --engine=isogit select fixture /main/* => {"result":[["/main/README.md",{"type":"blob","oid":"c73a75548372203286bac9fe4010e7b0f9d1e814"}],["/main/docs",{"type":"tree","oid":"a8d705f02f6f3fde0476c946f5f22cc5fb58238c"}],["/main/readme",{"type":"blob","oid":"b6fc4c620b67d95f953a5c1c1230aaab5db5a1b0"}]]}
+node cli.js --engine=isogit select fixture /main/docs/a => {"result":[["/main/docs/a",{"type":"blob","oid":"8c7e5a667f1b771847fe88c01c3de34413a1b220"}]]}
+node cli.js --engine=isogit select fixture /pending/default/pending/* => {"result":[["/pending/default/pending/r1",{"type":"tree","oid":"1b609917d35fac7434d8747812c214cf043c2a80"}]]}
+node cli.js --engine=isogit select fixture /*/*/docs/a => {"result":[["/execute/main/docs/a",{"type":"blob","oid":"8c7e5a667f1b771847fe88c01c3de34413a1b220"}],["/overlay/config/docs/a",{"type":"blob","oid":"053be0a22ab7f6e530b18cc41b51d85436838377"}]]}
+node cli.js --engine=isogit select fixture /main/nope => {"result":[]}
+node cli.js --engine=isogit select fixture /main//docs/ => {"result":[["/main/docs",{"type":"tree","oid":"a8d705f02f6f3fde0476c946f5f22cc5fb58238c"}]]}
+node cli.js --engine=isogit select fixture /Main => {"result":[["/main",{"type":"tree","oid":"8255a8aef576dc4794a530c47dc3e45aa42a3403"}]]}
+node cli.js --engine=isogit select fixture /main/*x => {"error":"bad segment '*x' in /main/*x"}
+node cli.js --engine=isogit read fixture /main/readme => {"result":"hello"}
+node cli.js --engine=isogit read fixture /main//readme => {"result":"hello"}
+node cli.js --engine=isogit read fixture /overlay/config/docs/a => {"result":"conf"}
+node cli.js --engine=isogit read fixture /pending/default/pending/r1/request.md => {"result":"# Request: r1"}
+node cli.js --engine=isogit read fixture /main/docs => {"error":"not a file: /main/docs"}
+node cli.js --engine=isogit read fixture /main/nope => {"error":"not a file: /main/nope"}
+node cli.js --engine=isogit read fixture /main/* => {"error":"bad segment '*' in /main/*"}
+node cli.js --engine=isogit frobnicate fixture /main => {"error":"unknown op: frobnicate"}
+node cli.js --engine=isogit read fixture /main/README.md => {"result":"convention"}
+node cli.js --engine=isogit select fixture /Main/readme.MD => {"result":[["/main/README.md",{"type":"blob","oid":"c73a75548372203286bac9fe4010e7b0f9d1e814"}]]}
+# Writing: each line commits, so the state carries on to the next lines.
+node cli.js --engine=isogit put fixture main /notes/one.md one => {"result":"03e2256f63b58ff82aec165c6225621d138b24f3"}
+node cli.js --engine=isogit read fixture /main/notes/one.md => {"result":"one"}
+node cli.js --engine=isogit put fixture main /readme changed => {"result":"9e8eedc5c581b0b7016f3c17e94e9aa15c9c147a"}
+node cli.js --engine=isogit read fixture /main/readme => {"result":"changed"}
+node cli.js --engine=isogit remove fixture main /notes/one.md => {"result":"550c172c2b2b63f4979b0314bf2798357a3cdfe6"}
+node cli.js --engine=isogit select fixture /main/notes => {"result":[]}
+node cli.js --engine=isogit put fixture main /docs folder => {"error":"conflict: /docs is a folder"}
+node cli.js --engine=isogit put fixture main /readme/x file => {"error":"conflict: /readme is a file"}
+node cli.js --engine=isogit remove fixture main /nope => {"error":"not found: /nope"}
+node cli.js --engine=isogit put fixture nope /a a => {"error":"no branch: nope"}
+node cli.js --engine=isogit put fixture Main /Notes/README.md convention => {"result":"ab41e491513ba44fea583a8fa8b4fb34d67d23c0"}
+node cli.js --engine=isogit select fixture /main/notes/* => {"result":[["/main/notes/readme.md",{"type":"blob","oid":"c73a75548372203286bac9fe4010e7b0f9d1e814"}]]}
+node cli.js --engine=isogit put fixture main /a_b x => {"error":"bad segment 'a_b' in /a_b"}
+node cli.js --engine=isogit select fixture /main/* => {"result":[["/main/README.md",{"type":"blob","oid":"c73a75548372203286bac9fe4010e7b0f9d1e814"}],["/main/docs",{"type":"tree","oid":"a8d705f02f6f3fde0476c946f5f22cc5fb58238c"}],["/main/notes",{"type":"tree","oid":"7b47bf514ec59fedc1b63dc2b6e441c80e6d07b1"}],["/main/readme",{"type":"blob","oid":"21fb1eca31e64cd3914025058b21992ab76edcf9"}]]}
+node cli.js --engine=isogit merge fixture overlay/config main => {"error":"not merged: overlay/config and main are disjoint layers"}
+node cli.js --engine=isogit put fixture execute/main /responses/r1.md done => {"result":"953940f6be25a62e5efbab5e8bc12dc231a737ee"}
+node cli.js --engine=isogit merge fixture execute/main main => {"result":"9bd737dc56da4f4f0c3dc689b0175f9dd54079b6"}
+node cli.js --engine=isogit read fixture /main/responses/r1.md => {"result":"done"}
+node cli.js --engine=isogit merge fixture execute/main main => {"result":"9bd737dc56da4f4f0c3dc689b0175f9dd54079b6"}
+node cli.js --engine=isogit merge fixture main execute/main => {"result":"0b2f9262b2a127d5b3cf6e7eec229e3c9f502668"}

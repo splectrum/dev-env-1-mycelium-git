@@ -1,4 +1,5 @@
-# Test commands for mycelium-git, for a test run, run from mycelium-git/.
+# Test commands for mycelium-git on native git, for a test run, run from
+# mycelium-git/. commands-isogit.txt is the same on isomorphic-git.
 # One invocation per line: <command> <arg>... => <expectation>
 # The first line builds the test repository, with stable oids.
 sh test/fixture.sh fixture => exit 0
@@ -23,23 +24,23 @@ node cli.js frobnicate fixture /main => {"error":"unknown op: frobnicate"}
 node cli.js read fixture /main/README.md => {"result":"convention"}
 node cli.js select fixture /Main/readme.MD => {"result":[["/main/README.md",{"type":"blob","oid":"c73a75548372203286bac9fe4010e7b0f9d1e814"}]]}
 # Writing: each line commits, so the state carries on to the next lines.
-node cli.js put fixture main /notes/one.md one => {"result":"c40b9305a8bf255d4d65e2bc3ea3a71ee19b2389"}
+node cli.js put fixture main /notes/one.md one => {"result":"03e2256f63b58ff82aec165c6225621d138b24f3"}
 node cli.js read fixture /main/notes/one.md => {"result":"one"}
-node cli.js put fixture main /readme changed => {"result":"7e73d022cfa8a33811971e592d34697f319f80e5"}
+node cli.js put fixture main /readme changed => {"result":"9e8eedc5c581b0b7016f3c17e94e9aa15c9c147a"}
 node cli.js read fixture /main/readme => {"result":"changed"}
-node cli.js remove fixture main /notes/one.md => {"result":"179556ce81380a2469a2d738d6b578eef95c869c"}
+node cli.js remove fixture main /notes/one.md => {"result":"550c172c2b2b63f4979b0314bf2798357a3cdfe6"}
 node cli.js select fixture /main/notes => {"result":[]}
 node cli.js put fixture main /docs folder => {"error":"conflict: /docs is a folder"}
 node cli.js put fixture main /readme/x file => {"error":"conflict: /readme is a file"}
 node cli.js remove fixture main /nope => {"error":"not found: /nope"}
 node cli.js put fixture nope /a a => {"error":"no branch: nope"}
-node cli.js put fixture Main /Notes/README.md convention => {"result":"bde8253104b1acb1416d59b44fd43f25fbd3b651"}
+node cli.js put fixture Main /Notes/README.md convention => {"result":"ab41e491513ba44fea583a8fa8b4fb34d67d23c0"}
 node cli.js select fixture /main/notes/* => {"result":[["/main/notes/readme.md",{"type":"blob","oid":"c73a75548372203286bac9fe4010e7b0f9d1e814"}]]}
 node cli.js put fixture main /a_b x => {"error":"bad segment 'a_b' in /a_b"}
 node cli.js select fixture /main/* => {"result":[["/main/README.md",{"type":"blob","oid":"c73a75548372203286bac9fe4010e7b0f9d1e814"}],["/main/docs",{"type":"tree","oid":"a8d705f02f6f3fde0476c946f5f22cc5fb58238c"}],["/main/notes",{"type":"tree","oid":"7b47bf514ec59fedc1b63dc2b6e441c80e6d07b1"}],["/main/readme",{"type":"blob","oid":"21fb1eca31e64cd3914025058b21992ab76edcf9"}]]}
 node cli.js merge fixture overlay/config main => {"error":"not merged: overlay/config and main are disjoint layers"}
-node cli.js put fixture execute/main /responses/r1.md done => {"result":"e85dc66ed508642081f8f0a620025e13d5a3a272"}
-node cli.js merge fixture execute/main main => {"result":"421e387ef5605293806bf315d2b67e68abb38c37"}
+node cli.js put fixture execute/main /responses/r1.md done => {"result":"953940f6be25a62e5efbab5e8bc12dc231a737ee"}
+node cli.js merge fixture execute/main main => {"result":"9bd737dc56da4f4f0c3dc689b0175f9dd54079b6"}
 node cli.js read fixture /main/responses/r1.md => {"result":"done"}
-node cli.js merge fixture execute/main main => {"result":"421e387ef5605293806bf315d2b67e68abb38c37"}
-node cli.js merge fixture main execute/main => {"result":"253bd335f3f35e9d78066e18c34b60f9089fffff"}
+node cli.js merge fixture execute/main main => {"result":"9bd737dc56da4f4f0c3dc689b0175f9dd54079b6"}
+node cli.js merge fixture main execute/main => {"result":"0b2f9262b2a127d5b3cf6e7eec229e3c9f502668"}
