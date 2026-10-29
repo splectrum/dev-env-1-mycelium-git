@@ -1,8 +1,9 @@
 # Test commands for mycelium-repo, for a test run, run from mycelium-repo/.
 # One invocation per line: <command> <arg>... => <expectation>
 # a is mycelium-git's fixture with a package folder pkg/; b is an empty
-# product repository. Published and received across engines and on Bare;
-# mycelium-git's CLI prepares and reads.
+# product repository: published and received. c is another fixture, synced
+# to an empty remote d. Across engines and on Bare; mycelium-git's CLI
+# prepares and reads.
 sh ../mycelium-git/test/fixture.sh a => exit 0
 git init -q --bare -b main b => exit 0
 node ../mycelium-git/cli.js put a main /pkg/a.md a => {"result":"8d1990d14bf0622444ed17523349992a47f75b85"}
@@ -24,3 +25,17 @@ node ../mycelium-git/cli.js put b execute/main /theirs.md diverging => {"result"
 node cli.js publish a pkg b => {"error":"diverged: execute/main"}
 node cli.js frobnicate a => {"error":"unknown op: frobnicate"}
 node cli.js --engine=nope receive b => {"error":"unknown engine: nope"}
+# Sync.
+sh ../mycelium-git/test/fixture.sh c => exit 0
+git init -q --bare -b main d => exit 0
+node cli.js --remote-engine=isogit sync c d => {"result":{"execute/main":"created","main":"created","overlay/config":"created","pending/default":"created"}}
+node ../mycelium-git/cli.js read d /main/readme => {"result":"hello"}
+node cli.js sync c d => {"result":{"execute/main":"same","main":"same","overlay/config":"same","pending/default":"same"}}
+node ../mycelium-git/cli.js put c main /a.md a => {"result":"a838f783a36d57e85496dc045a8ce7124481c618"}
+node ../mycelium-git/cli.js --engine=p2pgit put d overlay/config /theirs.md theirs => {"result":"62eb1aea40e2de6a5f0c78486f77ab5743a3b733"}
+node ../mycelium-git/cli.js put c pending/default /ours.md ours => {"result":"c976d19bdf2a207a894224d5734149d80f7421e1"}
+node ../mycelium-git/cli.js put d pending/default /theirs.md theirs => {"result":"f3cbb0f9fbd2690340d7de39d626ab19cbd6f418"}
+node ../mycelium-git/cli.js create-layer d data/elsewhere => {"result":"4d69ae0854dcb472b72b5a8f1bbd1537a8a6b949"}
+bare cli.js --engine=p2pgit sync c d => {"result":{"execute/main":"same","main":"advanced","overlay/config":"remote-ahead","pending/default":"diverged","data/elsewhere":"remote-only"}}
+node ../mycelium-git/cli.js read d /main/a.md => {"result":"a"}
+node ../mycelium-git/cli.js select d /pending/default/ours.md => {"result":[]}

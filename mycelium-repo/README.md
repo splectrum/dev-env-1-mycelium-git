@@ -25,12 +25,31 @@ The push writes into another repository. That is the rule as written
 within the boundary the rules give it: only `execute/main`, only forward,
 and the product merges into its own `main` itself.
 
+## repo/sync
+
+`sync({ repo, remote })` pushes every branch to another remote, plainly,
+and reports divergence, as `{ branch: status }`. Each branch's objects are
+copied, then the remote's branch is moved forward only. Anything else is
+reported, never forced.
+
+| Status | Meaning | Pushed |
+|---|---|---|
+| `created` | not on the remote before | yes |
+| `advanced` | the remote's branch moved forward to ours | yes |
+| `same` | nothing to do | no |
+| `remote-ahead` | the remote holds ours plus commits we don't have | no |
+| `diverged` | neither holds the other | no |
+| `remote-only` | on the remote, not here | no |
+
+For a diverged or remote-ahead branch the objects are still copied, but
+nothing refers to them on the remote; garbage collection removes them.
+
 ## To come
 
-- repo/sync, repo/seed
+- repo/seed
 
 ## Tests
 
-- `npm test`: the unit tests, on mycelium-git's fixture and an empty product
+- `npm test`: the unit tests, on mycelium-git's fixture and empty repositories
 - `test/commands.txt`: invocations for a test run, through `cli.js`, across
   engines and on Bare (`bare` on PATH)
