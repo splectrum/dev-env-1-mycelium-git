@@ -13,6 +13,7 @@
     "crypto": "npm:bare-node-crypto@1.0.0",
     "fs": "npm:bare-node-fs@1.0.2",
     "isomorphic-git": "1.44.8",
+    "p2p-git": "github:bare-for-pear/p2p-git",
     "path": "npm:bare-node-path@1.0.1",
     "process": "npm:bare-node-process@1.0.1"
   }
