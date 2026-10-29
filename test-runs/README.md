@@ -17,3 +17,5 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-28-r8.bundle` | Execution only records, into each response on `main`; expectations on the test lines; a report request interprets: 26 met, 3 not met on purpose, 1 unchecked, 1 incomplete on purpose |
 | `2026-10-28-r9.bundle` | mycelium-uri enforcing the rules in `join` and `split`: 28 of 28 met |
 | `2026-10-29-r10.bundle` | mycelium-uri with `validate` at the boundary, fixing empty parts: 32 of 32 met |
+| `2026-10-29-r11.bundle` | mycelium-uri and mycelium-xpath deployed together, seeded through the simplified scripts: 46 of 46 met |
+| `2026-10-29-r12.bundle` | The same with the self-test requests: 47 met, 3 not met and 1 incomplete on purpose, 1 unchecked |

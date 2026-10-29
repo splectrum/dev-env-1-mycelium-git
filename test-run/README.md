@@ -6,14 +6,16 @@ report request afterwards interprets the record. These scripts are what
 `repo/seed`, `layer/deploy` and `layer/request` will become.
 
 ```sh
-test-run/seed.sh /tmp/runs/r1 mycelium-uri test-mycelium-uri test-run/requests/report-runs
+test-run/seed.sh /tmp/runs/r1 test-run/requests/report-runs
 /tmp/runs/r1/.git/hooks/execute               # the kick
 git -C /tmp/runs/r1 show main:responses/report-runs/report.md
 ```
 
 - `seed.sh` creates the instance: `main` (README only), `capability/test`
-  (the module plus `runner.js`, `execute.js` and `report.js`),
-  `pending/default` (the requests), `execute/main`, and the kick
+  (every module, `mycelium-*`, plus `runner.js`, `execute.js` and
+  `report.js`), `pending/default` (a `test-<module>` request per module
+  with `test/commands.txt`, then the given request dirs), `execute/main`,
+  and the kick
   `.git/hooks/execute`. Git never calls it; it is the trigger, and runs
   `execute.js` as deployed on `capability/test`. Seed only from a
   committed dev state.
@@ -30,6 +32,9 @@ git -C /tmp/runs/r1 show main:responses/report-runs/report.md
   - `report.md` (Report).
 
   `pending/default` is never written; it holds the requests.
+- `deploy.sh`, `request.sh` and `seed.sh` commit through `commit-dir.sh`,
+  which commits a folder into a branch without a worktree. The ref moves
+  only if it still points where it did (compare-and-swap).
 - `runner.js` executes a tests file line by line, each command without a
   shell, and records it.
 - `report.js` (`Report: runs`) compares every recorded invocation with its
@@ -56,7 +61,7 @@ like any other change. To ask a kept run something:
 
 ```sh
 test-run/inflate.sh r7.bundle /tmp/runs/r7     # all branches, plus the kick
-test-run/deploy.sh /tmp/runs/r7 mycelium-uri   # only if it needs new capabilities
+test-run/deploy.sh /tmp/runs/r7                # only if it needs new capabilities
 test-run/request.sh /tmp/runs/r7 <request-dir>
 /tmp/runs/r7/.git/hooks/execute
 ```
