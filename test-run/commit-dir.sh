@@ -12,11 +12,12 @@ export GIT_AUTHOR_NAME="test-run" GIT_AUTHOR_EMAIL="test-run@localhost"
 export GIT_COMMITTER_NAME="test-run" GIT_COMMITTER_EMAIL="test-run@localhost"
 idx=$(mktemp -u)
 trap 'rm -f "$idx"' EXIT
-g() { GIT_INDEX_FILE=$idx git -C "$repo" "$@"; }
+gitdir=$(git -C "$repo" rev-parse --absolute-git-dir)
+g() { GIT_INDEX_FILE=$idx git --git-dir="$gitdir" "$@"; }
 
 parent=$(git -C "$repo" rev-parse -q --verify "refs/heads/$branch" || true)
 # The folder as a tree.
-g --work-tree="$dir" add -A .
+(cd "$dir" && g --work-tree=. add -A .)
 tree=$(g write-tree)
 rm -f "$idx"
 # Put it at <path> in the branch's tree.
