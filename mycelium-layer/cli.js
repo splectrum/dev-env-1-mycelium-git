@@ -3,16 +3,17 @@
 //   node cli.js [--engine=E] [--from-engine=E] import <repo> <from-repo> <branch> [as]
 //   node cli.js [--engine=E] deploy <repo> <layer> <folder>
 //   node cli.js [--engine=E] extract <repo> <layer> <path> <folder>
+//   node cli.js [--engine=E] intake <repo> <folder> <name>
 // Engines: native (default), isogit, p2pgit; --engine is the receiving
 // repository's, --from-engine the other's (default the same).
-// deploy commits as 'cli' at a fixed time, so its oids are stable.
+// deploy and intake commit as 'cli' at a fixed time, so their oids are stable.
 // Prints the outcome as one JSON line: {"result": ...}, or {"error": "..."}
 // with exit 1. Branch names come in from outside: validated here.
 
 import process from 'node:process'
 import { validate } from '../mycelium-uri/index.js'
 import { nativeBackend, isogitBackend, p2pgitBackend } from '../mycelium-git/index.js'
-import { importLayer, deploy, extract } from './index.js'
+import { importLayer, deploy, extract, intake } from './index.js'
 
 const engines = { native: nativeBackend, isogit: isogitBackend, p2pgit: p2pgitBackend }
 const argv = process.argv.slice(2)
@@ -50,6 +51,17 @@ try {
   } else if (op === 'extract') {
     const [layer, path, folder] = args
     result = await extract({ backend: engines[engine](dir), layer: branch(layer), path: validate(path), folder })
+  } else if (op === 'intake') {
+    const [folder, name] = args
+    const segment = validate('/' + name).slice(1)
+    if (segment.includes('/') || !segment) throw new Error(`not a request name: ${name}`)
+    result = await intake({
+      backend: engines[engine](dir),
+      folder,
+      name: segment,
+      author: { name: 'cli', email: 'cli@localhost' },
+      time: '2026-01-02T00:00:00Z'
+    })
   } else {
     throw new Error(`unknown op: ${op}`)
   }
