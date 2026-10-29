@@ -21,3 +21,4 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r12.bundle` | The same with the self-test requests: 47 met, 3 not met and 1 incomplete on purpose, 1 unchecked |
 | `2026-10-29-r13.bundle` | mycelium-xpath with `select` only: 44 of 44 met |
 | `2026-10-29-r14.bundle` | mycelium-git reading a repository as one tree on native git, with uri and xpath; machinery pinned at `673120a`: 62 of 62 met |
+| `2026-10-29-r15.bundle` | Machinery deployed from validated version `ee55ef63-87ce-4e11-a746-a627df2649cb` (a GUID, not a commit): 62 of 62 met |
