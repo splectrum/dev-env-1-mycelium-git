@@ -1,12 +1,23 @@
 #!/bin/sh
-# Put a request into an instance's pending/default, as one commit.
+# Put a request into an instance's pending/default, as one commit, with
+# request intake (layer/request, mycelium-layer).
 #   test-run/request.sh <repo> <request-dir>
 # The request dir (e.g. test-run/requests/report-runs) becomes
-# pending/<its name>/. Kick the instance afterwards.
+# pending/<its name>/; a request already there is refused. Kick the
+# instance afterwards.
 set -eu
 repo=$1
 req=$2
-name=$(basename "$req")
-git -C "$repo" cat-file -e "pending/default:pending/$name" 2>/dev/null && { echo "request exists: $name" >&2; exit 2; }
-"$(dirname "$0")/commit-dir.sh" "$repo" pending/default "$req" "pending/$name" "Add request: $name" >/dev/null
-echo "requested $name"
+src=$(cd "$(dirname "$0")/.." && pwd)
+node --input-type=module -e "
+import { intake } from '$src/mycelium-layer/index.js'
+import { nativeBackend } from '$src/mycelium-git/index.js'
+const [repo, folder, name] = process.argv.slice(1)
+try {
+  await intake({ backend: nativeBackend(repo), folder, name,
+    author: { name: 'test-run', email: 'test-run@localhost' } })
+} catch (err) {
+  console.error(err.message)
+  process.exit(1)
+}" "$repo" "$req" "$(basename "$req")"
+echo "requested $(basename "$req")"
