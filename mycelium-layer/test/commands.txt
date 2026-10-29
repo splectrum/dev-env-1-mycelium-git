@@ -1,0 +1,28 @@
+# Test commands for mycelium-layer, for a test run, run from mycelium-layer/.
+# One invocation per line: <command> <arg>... => <expectation>
+# Two fixture repositories, a and b (mycelium-git's fixture); a layer made in a
+# is imported into b, across engines and on Bare. mycelium-git's CLI prepares
+# and reads.
+sh ../mycelium-git/test/fixture.sh a => exit 0
+sh ../mycelium-git/test/fixture.sh b => exit 0
+node ../mycelium-git/cli.js create-layer a data/sets => {"result":"a9aad9fa479b3a0c38cd3d828107164f86a9a273"}
+node ../mycelium-git/cli.js put a data/sets /one.md one => {"result":"5ed9f09eddd895320e122c4646bc34cab1d5cb94"}
+node cli.js import b a data/sets => {"result":{"commit":"5ed9f09eddd895320e122c4646bc34cab1d5cb94","copied":4}}
+node ../mycelium-git/cli.js read b /data/sets/one.md => {"result":"one"}
+node cli.js import b a data/sets => {"result":{"commit":"5ed9f09eddd895320e122c4646bc34cab1d5cb94","copied":0}}
+node ../mycelium-git/cli.js put a data/sets /two.md two => {"result":"3bfd39082d0ae082ad6cdd23c1c5907809ec53dc"}
+node cli.js --engine=p2pgit import b a data/sets => {"result":{"commit":"3bfd39082d0ae082ad6cdd23c1c5907809ec53dc","copied":3}}
+node ../mycelium-git/cli.js --engine=p2pgit read b /data/sets/two.md => {"result":"two"}
+node cli.js --engine=isogit --from-engine=native import b a data/sets data/theirs => {"result":{"commit":"3bfd39082d0ae082ad6cdd23c1c5907809ec53dc","copied":0}}
+node ../mycelium-git/cli.js --engine=isogit select b /data/* => {"result":[["/data/sets",{"type":"tree","oid":"a7fd516d3499dd84ecaaaf3b7ede41820c597f62"}],["/data/theirs",{"type":"tree","oid":"a7fd516d3499dd84ecaaaf3b7ede41820c597f62"}]]}
+bare cli.js --engine=p2pgit --from-engine=native import b a data/sets data/bare => {"result":{"commit":"3bfd39082d0ae082ad6cdd23c1c5907809ec53dc","copied":0}}
+bare ../mycelium-git/cli.js --engine=p2pgit read b /data/bare/two.md => {"result":"two"}
+node cli.js import b a data/nope => {"error":"no branch: data/nope"}
+node cli.js import b a data/sets other/x => {"error":"not a layer: other/x"}
+node cli.js import b a data/sets data/sets/more => {"error":"not a leaf: data/sets/more and data/sets"}
+node cli.js import b a data/A_b => {"error":"bad segment 'a_b' in /data/A_b"}
+node ../mycelium-git/cli.js put a main /x.md x => {"result":"a415cc3eb3e5aaaa4a2fc833c0916cb3de4b9290"}
+node ../mycelium-git/cli.js put b main /y.md y => {"result":"69909eb19b14de4ad22d2ef1edd0ae807aeac1b0"}
+node cli.js import b a main => {"error":"diverged: main"}
+node cli.js frobnicate b a main => {"error":"unknown op: frobnicate"}
+node cli.js --engine=nope import b a main => {"error":"unknown engine: nope"}
