@@ -71,6 +71,22 @@ backend into another, whatever their engines, and resolves the number of
 objects copied. Objects are content-addressed, so each arrives under the
 same oid. One the target already has is skipped, with what it reaches.
 
+## Bundles
+
+`writeBundle(backend, { branch: commit })` writes a bundle as bytes, in
+git's format: a header naming the refs, then a packfile of every object
+they reach. It's a full bundle, with no prerequisites, and each object is
+stored whole, without deltas. Native git verifies, clones and fscks it.
+
+`readBundle(backend, bytes)` reads a bundle's objects in as loose objects,
+and resolves `{ branches, objects }`. It also takes the delta-compressed
+objects native git's bundles hold, against objects in the pack or already
+in the backend. A bundle whose checksum doesn't match, or whose
+prerequisites the backend lacks, is refused.
+
+Both run on the backend contract, with pako for compression, so on every
+engine and on Bare, p2p-git included.
+
 ## Splitting a folder
 
 `split(backend, commit, folder)` splits a folder out of a commit's history,

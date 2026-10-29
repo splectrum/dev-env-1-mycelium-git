@@ -4,6 +4,8 @@
 //   node cli.js [--engine=E] deploy <repo> <layer> <folder>
 //   node cli.js [--engine=E] extract <repo> <layer> <path> <folder>
 //   node cli.js [--engine=E] intake <repo> <folder> <name>
+//   node cli.js [--engine=E] export <repo> <layer> <file>
+//   node cli.js [--engine=E] import-bundle <repo> <file> [branch] [as]
 // Engines: native (default), isogit, p2pgit; --engine is the receiving
 // repository's, --from-engine the other's (default the same).
 // deploy and intake commit as 'cli' at a fixed time, so their oids are stable.
@@ -13,7 +15,7 @@
 import process from 'node:process'
 import { validate } from '../mycelium-uri/index.js'
 import { nativeBackend, isogitBackend, p2pgitBackend } from '../mycelium-git/index.js'
-import { importLayer, deploy, extract, intake } from './index.js'
+import { importLayer, exportLayer, importBundle, deploy, extract, intake } from './index.js'
 
 const engines = { native: nativeBackend, isogit: isogitBackend, p2pgit: p2pgitBackend }
 const argv = process.argv.slice(2)
@@ -61,6 +63,17 @@ try {
       name: segment,
       author: { name: 'cli', email: 'cli@localhost' },
       time: '2026-01-02T00:00:00Z'
+    })
+  } else if (op === 'export') {
+    const [layer, file] = args
+    result = await exportLayer({ backend: engines[engine](dir), layer: branch(layer), file })
+  } else if (op === 'import-bundle') {
+    const [file, from, as] = args
+    result = await importBundle({
+      backend: engines[engine](dir),
+      file,
+      branch: from === undefined ? undefined : branch(from),
+      as: as === undefined ? undefined : branch(as)
     })
   } else {
     throw new Error(`unknown op: ${op}`)

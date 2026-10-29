@@ -52,3 +52,4 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r40.bundle` | The first instance seeded with repo/seed (seed.sh on mycelium-repo); seed tests on every engine and on Bare: all met |
 | `2026-10-29-r41.bundle` | Request intake (mycelium-layer) on every engine and on Bare; request.sh on it: all met |
 | `2026-10-29-r40-asked.bundle` | r40 inflated, a report request put in with request.sh on request intake (a second one refused), executed by the run itself |
+| `2026-10-29-r42.bundle` | layer/export and bundles on the backend contract (mycelium-git writeBundle, readBundle) across engines and on Bare: all met |
