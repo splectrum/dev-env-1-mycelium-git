@@ -20,3 +20,4 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r11.bundle` | mycelium-uri and mycelium-xpath deployed together, seeded through the simplified scripts: 46 of 46 met |
 | `2026-10-29-r12.bundle` | The same with the self-test requests: 47 met, 3 not met and 1 incomplete on purpose, 1 unchecked |
 | `2026-10-29-r13.bundle` | mycelium-xpath with `select` only: 44 of 44 met |
+| `2026-10-29-r14.bundle` | mycelium-git reading a repository as one tree on native git, with uri and xpath; machinery pinned at `673120a`: 62 of 62 met |
