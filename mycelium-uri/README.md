@@ -15,7 +15,8 @@ functions work on valid values and don't check again.
 - `validate(uri)` → the canonical URI. Fixes accepted deviations and
   throws when the rules are broken. The accepted deviations are empty
   parts: `//` and a trailing `/`; `''` is the root. So
-  `validate('/main//x/')` → `'/main/x'`
+  `validate('/main//x/')` → `'/main/x'`. With `{ star: true }` a step
+  may also be `*`, for paths that select
 - `isUri(uri)` → boolean: is it a canonical URI
 - `isSegment(s)` → boolean
 - `parse(uri)` → segments: `'/a/b'` → `['a', 'b']`, `'/'` → `[]`. Strict:

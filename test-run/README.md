@@ -40,6 +40,15 @@ git -C /tmp/runs/r1 show main:responses/report-runs/report.md
 - `report.js` (`Report: runs`) compares every recorded invocation with its
   expectation, read from the tests file at the recorded state.
 
+## Pinned machinery
+
+The run machinery (`runner.js`, `execute.js`, `report.js` and the kick) is
+deployed from a validated version: the dev commit in `test-run/machinery`.
+Only the modules come from the current commit. A machinery change is
+tested by running it with `MACHINERY=HEAD`; once a run validates it, the
+pin moves. Kept runs carry their own machinery, so each one stays
+investigable as it was.
+
 ## Requests
 
 A request names its tests: `Run: mycelium-uri/test/commands.txt in

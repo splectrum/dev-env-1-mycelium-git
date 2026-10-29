@@ -14,12 +14,13 @@ export function isSegment (s) {
 // deviations, and throws when the rules are broken.
 // Accepted deviations: empty parts ('//', a trailing '/'); '' is the root.
 //   validate('/main//x/') → '/main/x'
-export function validate (uri) {
+// With { star: true } a step may also be '*', for paths that select.
+export function validate (uri, { star = false } = {}) {
   if (typeof uri !== 'string') throw new TypeError('uri must be a string')
   if (uri !== '' && !uri.startsWith('/')) throw new Error(`not absolute: ${uri}`)
   const segments = uri.split('/').filter(s => s !== '')
   for (const s of segments) {
-    if (!isSegment(s)) throw new Error(`bad segment '${s}' in ${uri}`)
+    if (!isSegment(s) && !(star && s === '*')) throw new Error(`bad segment '${s}' in ${uri}`)
   }
   return '/' + segments.join('/')
 }
