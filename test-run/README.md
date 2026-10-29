@@ -13,7 +13,8 @@ git -C /tmp/runs/r1 show main:responses/report-runs/report.md
 
 - Instances are bare repositories: no working tree, only objects and refs,
   reached through requests.
-- `seed.sh` creates the instance: `main` (README only), `capability/test`
+- `seed.sh` creates the instance with `repo/seed` (mycelium-repo), from a
+  template it stages: `main` (a readme only), `capability/test`
   (every module, `mycelium-*`, plus `runner.js`, `execute.js` and
   `report.js`), `pending/default` (a `test-<module>` request per module
   with `test/commands.txt`, then the given request dirs), `execute/main`,
@@ -34,9 +35,9 @@ git -C /tmp/runs/r1 show main:responses/report-runs/report.md
   - `report.md` (Report).
 
   `pending/default` is never written; it holds the requests.
-- `deploy.sh`, `request.sh` and `seed.sh` commit through `commit-dir.sh`,
-  which commits a folder into a branch without a worktree. The ref moves
-  only if it still points where it did (compare-and-swap).
+- `deploy.sh` deploys with `layer/deploy` (mycelium-layer). `request.sh`
+  still commits through `commit-dir.sh`, which commits a folder into a
+  branch without a worktree, by compare-and-swap.
 - `runner.js` executes a tests file line by line, each command without a
   shell, and records it.
 - `report.js` (`Report: runs`) compares every recorded invocation with its

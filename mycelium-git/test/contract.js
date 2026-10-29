@@ -182,6 +182,17 @@ export function contract (name, makeBackend) {
     await assert.rejects(w.commitTree('nope', tree, 'x', { author, time }), /no branch: nope/)
   })
 
+  test(`${name}: init: a new, empty, bare repository`, async () => {
+    const dir = join(mkdtempSync(join(tmpdir(), 'init-')), 'new')
+    const b = makeBackend(dir)
+    await b.init()
+    assert.deepEqual(await b.listBranches(), [])
+    const tree = await b.writeTree([])
+    const c = await b.writeCommit({ tree, parents: [], message: 'First', author, time })
+    await b.updateBranch('main', c, null)
+    assert.deepEqual(await b.listBranches(), [['main', c]])
+  })
+
   test(`${name}: raw objects: read, write, has`, async () => {
     const main = await head('main')
     const { type, object } = await wb.readObject(main)
