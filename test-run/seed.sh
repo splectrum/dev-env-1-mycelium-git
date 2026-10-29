@@ -7,7 +7,8 @@
 #   pending/default  a request test-<module> per module with test/commands.txt,
 #                    then the given request dirs (e.g. test-run/requests/report-runs)
 #   execute/main     from main
-# and the kick .git/hooks/execute, which runs execute.js as deployed.
+# as a bare repository (no working tree), with the kick hooks/execute, which
+# runs execute.js as deployed.
 # The machinery comes from its pinned version: see deploy.sh.
 set -eu
 dir=$1
@@ -19,7 +20,7 @@ source_commit=$(git -C "$src" rev-parse --short HEAD)
 stage=$(mktemp -d)
 trap 'rm -rf "$stage"' EXIT
 
-git init -q -b main "$dir"
+git init -q --bare -b main "$dir"
 mkdir "$stage/main"
 printf '# Test-run instance\n\nSeeded from dev repository commit %s.\n' "$source_commit" > "$stage/main/README.md"
 "$src/test-run/commit-dir.sh" "$dir" main "$stage/main" . "Seed test-run instance
@@ -38,8 +39,7 @@ done
 for req in "$@"; do "$src/test-run/request.sh" "$dir" "$src/$req" >/dev/null; done
 
 git -C "$dir" branch execute/main main
-git -C "$dir" reset -q --hard
 # The kick, as deployed: every instance carries its own.
-git -C "$dir" show capability/test:hook.sh > "$dir/.git/hooks/execute"
-chmod +x "$dir/.git/hooks/execute"
+git -C "$dir" show capability/test:hook.sh > "$dir/hooks/execute"
+chmod +x "$dir/hooks/execute"
 echo "seeded $dir"

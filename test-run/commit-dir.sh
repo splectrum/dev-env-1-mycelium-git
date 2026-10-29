@@ -6,17 +6,20 @@
 # branch is created as an orphan. The ref moves only if it still points where
 # it did (compare-and-swap): history only grows, nothing is forced.
 set -eu
-repo=$1 branch=$2 dir=$3 path=$4 message=$5
+repo=$1 branch=$2 dir=$(cd "$3" && pwd) path=$4 message=$5
 
 export GIT_AUTHOR_NAME="test-run" GIT_AUTHOR_EMAIL="test-run@localhost"
 export GIT_COMMITTER_NAME="test-run" GIT_COMMITTER_EMAIL="test-run@localhost"
 idx=$(mktemp -u)
 trap 'rm -f "$idx"' EXIT
-g() { GIT_INDEX_FILE=$idx git -C "$repo" "$@"; }
+gitdir=$(git -C "$repo" rev-parse --absolute-git-dir)
+# Every call runs with the folder as its work tree: only add reads it, and
+# nothing writes to it. That also works in a bare repository.
+g() { (cd "$dir" && GIT_INDEX_FILE=$idx git --git-dir="$gitdir" --work-tree=. "$@"); }
 
 parent=$(git -C "$repo" rev-parse -q --verify "refs/heads/$branch" || true)
 # The folder as a tree.
-g --work-tree="$dir" add -A .
+g add -A .
 tree=$(g write-tree)
 rm -f "$idx"
 # Put it at <path> in the branch's tree.

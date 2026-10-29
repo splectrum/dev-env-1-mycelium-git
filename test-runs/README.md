@@ -33,3 +33,5 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r24.bundle` | The same with the machinery writing through mycelium-git: identical report, records, files and history shape; validated as `f028269b-3f7d-4332-b726-6b7b72a3b930` |
 | `2026-10-29-r25.bundle` | Machinery pinned at `f028269b-3f7d-4332-b726-6b7b72a3b930`, mycelium-git with its write slice: all met |
 | `2026-10-29-r26.bundle` | All names inside lowercase, files included; new ids for mycelium-uri and mycelium-git: 92 of 92 met |
+| `2026-10-29-r27.bundle` | The first bare instance (no working tree), machinery in development: identical to r26 in report, records, files and history |
+| `2026-10-29-r28.bundle` | Bare instance, machinery pinned at `90ea965c-8ab2-4d17-a8c6-6687e4132702`: all met; inflated bare and asked again |
