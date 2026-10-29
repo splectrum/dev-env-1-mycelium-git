@@ -3,5 +3,6 @@
 // plain merges under the rules.
 
 export { nativeBackend } from './lib/native.js'
+export { isogitBackend } from './lib/isogit.js'
 export { openRepo, pinned } from './lib/repo.js'
 export { writer } from './lib/write.js'

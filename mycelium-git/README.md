@@ -57,12 +57,28 @@ stored names, valid when they come in.
 - History and merge: `mergeBase(a, b)` → oid or `null`;
   `isAncestor(a, b)`; `mergeTrees(ours, theirs)` → `{ tree, conflicts }`
 
-`nativeBackend(dir)` implements it over git's plumbing: the reference.
+Adapters, one per engine, each run against the same contract suite
+(`test/contract.js`):
+
+- `nativeBackend(gitdir)`: git's plumbing, the reference
+- `isogitBackend(gitdir, { fs })`: isomorphic-git (1.44.8) over a
+  filesystem, node's by default. For compatibility: the same repository,
+  read and written by an engine that also runs where native git does not.
+  It has no atomic compare-and-swap, so `updateBranch` compares, then
+  writes. Its merge stores the merged tree only through a real merge, so
+  `mergeTrees` leaves an unreferenced merge commit, which git's garbage
+  collection removes.
+
+A commit message always ends with a newline, as git's own commits do, so
+the same writes give the same oids on every engine (`test/engines.test.js`).
 
 ## Tests
 
-- `npm test`: the unit tests, on a fixture repository
+- `npm test`: the contract suite on each engine, and the cross-engine test,
+  on a fixture repository (bare)
 - `test/commands.txt`: invocations for a test run. The first line builds
   the fixture (`test/fixture.sh`, fixed dates, so its oids are stable);
   the writes commit as `cli` at a fixed time, so their oids are stable too,
-  and each line's state carries on to the next
+  and each line's state carries on to the next. `test/commands-isogit.txt`
+  is the same on isomorphic-git (`--engine=isogit`), with the same
+  expectations
