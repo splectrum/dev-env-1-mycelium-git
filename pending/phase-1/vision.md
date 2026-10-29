@@ -39,7 +39,7 @@ the way can take them into account.
   addressable by its oid, never rewritten.
 - Less reliance on delta compression. Bundles are the transport; deltas
   only save bytes in transit, an optimisation for later.
-- Seen in a probe (2026-10-29): p2p-git's internal pieces can already
+- Seen in a probe (2026-10-29, `probes/`): p2p-git's internal pieces can already
   write a bundle native git accepts and read a native bundle with deltas
   into loose objects. Its pack parser decodes delta offsets wrongly; the
   raw bytes are kept, so it's a small fix.
