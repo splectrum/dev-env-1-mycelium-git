@@ -44,3 +44,4 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r11-redeploy.bundle` | r11 inflated and given a second deploy into `capability/test` |
 | `2026-10-29-r28-asked.bundle` | r28 inflated as a bare instance and asked for a report again (`report-again`), executed by the run itself |
 | `2026-10-29-r34.bundle` | mycelium-git branch and layer rules (create layer, execution branch, delete once merged) on three engines, on Node and Bare: all met |
+| `2026-10-29-r35.bundle` | layer/import (mycelium-layer) across engines and on Bare; mycelium-git transfer and importLayer: all met |
