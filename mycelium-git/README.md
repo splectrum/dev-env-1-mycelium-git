@@ -17,8 +17,10 @@ unambiguous. `mycelium-xpath` navigates it, `*` steps included:
     `{ type: 'tree' | 'blob', oid }`, or `{ type: 'branches', prefix }`
     above the branches
   - `read(path)` → the content of the one file at `path`, as bytes
-- Paths are valid when they come in: validation is at the boundary (here,
-  `cli.js` validates with `mycelium-uri`).
+- Inside, paths are stored names and match exactly. The boundary (here,
+  `cli.js`) runs its own process for an external URI: `validate` it with
+  `mycelium-uri`, then select with `sameName` to find the stored names;
+  `select(path, match)` and `read(path, match)` take it.
 
 ## Backend contract (first slice)
 

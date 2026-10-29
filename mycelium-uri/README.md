@@ -24,6 +24,9 @@ functions work on valid values and don't check again.
   `''` is the root. So `validate('/Main//README.md/')` →
   `'/main/readme.md'`. With `{ star: true }` a step
   may also be `*`, for paths that select
+- `sameName(name, step)` → boolean: is a stored name the one a canonical
+  step names (case-insensitive). For the boundary only: it finds the
+  stored names of an external URI once; inside, stored names match exactly
 - `isUri(uri)` → boolean: is it a canonical URI
 - `isSegment(s)` → boolean
 - `parse(uri)` → segments: `'/a/b'` → `['a', 'b']`, `'/'` → `[]`. Strict:

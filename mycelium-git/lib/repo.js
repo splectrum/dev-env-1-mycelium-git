@@ -34,11 +34,12 @@ export function openRepo (backend) {
 
   return {
     // All nodes matching a path, as [path, node] pairs ('*' steps allowed).
-    select: path => xselect(children, root, path),
+    // Paths are stored names, matched exactly; the boundary passes match.
+    select: (path, match) => xselect(children, root, path, match),
 
     // The content of the one blob at a path.
-    async read (path) {
-      const found = await xselect(children, root, path)
+    async read (path, match) {
+      const found = await xselect(children, root, path, match)
       if (found.length !== 1 || found[0][1].type !== 'blob') throw new Error(`not a file: ${path}`)
       return backend.readBlob(found[0][1].oid)
     }
