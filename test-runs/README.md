@@ -40,3 +40,6 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r31.bundle` | The same with the machinery recording the Bare version: identical; validated as `7afe7327-3cdc-4834-a4ff-640056b483be` |
 | `2026-10-29-r32.bundle` | Machinery pinned at `7afe7327-3cdc-4834-a4ff-640056b483be`: 215 of 215 met |
 | `2026-10-29-r33.bundle` | mycelium-git on three engines (native, isomorphic-git, p2p-git), each on Node and on Bare: the same 41 invocations met on all six |
+| `2026-10-29-pin-check.bundle` | The check run after the machinery was first pinned (by commit, `673120a`): all met |
+| `2026-10-29-r11-redeploy.bundle` | r11 inflated and given a second deploy into `capability/test` |
+| `2026-10-29-r28-asked.bundle` | r28 inflated as a bare instance and asked for a report again (`report-again`), executed by the run itself |
