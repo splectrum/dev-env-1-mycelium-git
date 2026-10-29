@@ -17,6 +17,9 @@ unambiguous. `mycelium-xpath` navigates it, `*` steps included:
     `{ type: 'tree' | 'blob', oid }`, or `{ type: 'branches', prefix }`
     above the branches
   - `read(path)` → the content of the one file at `path`, as bytes
+- `pinned(backend, state)` → the backend with its branches fixed to the
+  commits in `state` (`{ branch: commit }`): a repository at a recorded
+  state, such as a unit's
 - Inside, paths are stored names and match exactly. The boundary (here,
   `cli.js`) runs its own process for an external URI: `validate` it with
   `mycelium-uri`, then select with `sameName` to find the stored names;

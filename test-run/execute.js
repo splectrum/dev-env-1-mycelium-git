@@ -19,11 +19,18 @@
 //   results.jsonl (Run) one line per invocation: command, exit, output
 //   report.md     (Report) the report
 // pending/default is not written: it holds the requests only.
+//
+// Reads go through mycelium-git, deployed next to this file; the code that
+// runs is the deployed tree this file is part of. Writes still use git.
 
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { tmpdir } from 'node:os'
 import { spawnSync } from 'node:child_process'
+import { nativeBackend, openRepo, pinned } from './mycelium-git/index.js'
+
+const code = dirname(fileURLToPath(import.meta.url))
 
 const [repo, capability = 'capability/test'] = process.argv.slice(2)
 if (!repo) {
@@ -38,28 +45,32 @@ const git = (args, opts = {}) => {
   }
   return r.status === 0 ? r.stdout.trim() : null
 }
-const exists = spec => git(['cat-file', '-e', spec], { allowFail: true }) !== null
+const backend = nativeBackend(repo)
+const now = openRepo(backend)
+const found = async path => (await now.select(path)).length > 0
+const name = path => path.split('/').pop()
 
 git(['worktree', 'prune'])
-const pending = git(['ls-tree', '-d', '--name-only', 'pending/default:pending']).split('\n').filter(Boolean)
-  .filter(name => exists(`pending/default:pending/${name}/request.md`) && !exists(`main:responses/${name}`))
-  .map(name => {
-    const text = git(['show', `pending/default:pending/${name}/request.md`])
-    const run = text.match(/^Run:\s*(\S+)\s+in\s+(\S+)\s*$/m)
-    const report = text.match(/^Report:\s*(\S+)\s*$/m)
-    return { name, run, report, line: (run || report || [null])[0] }
-  })
-  .sort((a, b) => (!!a.report - !!b.report) || a.name.localeCompare(b.name))
+const pending = []
+for (const [path] of await now.select('/pending/default/pending/*')) {
+  if (!await found(`${path}/request.md`) || await found(`/main/responses/${name(path)}`)) continue
+  const text = (await now.read(`${path}/request.md`)).toString()
+  const run = text.match(/^Run:\s*(\S+)\s+in\s+(\S+)\s*$/m)
+  const report = text.match(/^Report:\s*(\S+)\s*$/m)
+  pending.push({ name: name(path), run, report, line: (run || report || [null])[0] })
+}
+pending.sort((a, b) => (!!a.report - !!b.report) || a.name.localeCompare(b.name))
 
-for (const request of pending) execute(request)
+for (const request of pending) await execute(request)
 console.log(JSON.stringify({ executed: pending.map(r => r.name) }))
 
-function execute ({ name, run: runLine, report: reportLine, line }) {
+async function execute ({ name, run: runLine, report: reportLine, line }) {
   const runId = new Date().toISOString().replace(/[:.]/g, '-').toLowerCase()
   const started = new Date().toISOString()
   // Every state the unit runs on, by commit, before anything changes.
+  const branches = Object.fromEntries(await backend.listBranches())
   const state = Object.fromEntries(['pending/default', 'main', 'execute/main', capability]
-    .map(b => [b, git(['rev-parse', b])]))
+    .map(b => [b, branches[b]]))
   const work = mkdtempSync(join(tmpdir(), 'execute-'))
   const unit = {
     invocation: { request: name, line },
@@ -69,12 +80,6 @@ function execute ({ name, run: runLine, report: reportLine, line }) {
   }
 
   try {
-    // The deployed capability tree is what runs.
-    const code = join(work, 'code')
-    mkdirSync(code)
-    const archive = spawnSync('git', ['archive', state[capability]], { cwd: repo, maxBuffer: 1 << 30 })
-    spawnSync('tar', ['-x', '-C', code], { input: archive.stdout })
-
     const execWt = join(work, 'execute')
     git(['worktree', 'add', '-q', execWt, 'execute/main'])
     git(['merge', '-q', '--no-edit', 'main'], { cwd: execWt })
@@ -85,9 +90,9 @@ function execute ({ name, run: runLine, report: reportLine, line }) {
     if (!line) {
       outcome = "not executed: the request has no 'Run:' or 'Report:' line."
     } else if (runLine) {
-      outcome = runTests(code, work, out, runLine[1], runLine[2])
+      outcome = await runTests(state, work, out, runLine[1], runLine[2])
     } else {
-      outcome = makeReport(code, out, reportLine[1])
+      outcome = makeReport(out, reportLine[1])
     }
 
     unit.nondeterministic.finished = new Date().toISOString()
@@ -114,13 +119,15 @@ function execute ({ name, run: runLine, report: reportLine, line }) {
 
 // Run a list of invocations through the deployed runner; the record is
 // results.jsonl. The outcome says whether the runner completed, nothing more.
-function runTests (code, work, out, testsPath, folder) {
+async function runTests (state, work, out, testsPath, folder) {
   let testsFile = join(code, testsPath)
   if (testsPath.startsWith('pending/')) {
-    // A missing file stays missing, so the runner reports the error.
+    // From the request, at the unit's state. A missing file stays missing,
+    // so the runner reports the error.
     testsFile = join(work, 'tests.txt')
-    const tests = git(['show', `pending/default:${testsPath}`], { allowFail: true })
-    if (tests !== null) writeFileSync(testsFile, tests + '\n')
+    const at = openRepo(pinned(backend, state))
+    const path = `/pending/default/${testsPath}`
+    if ((await at.select(path)).length) writeFileSync(testsFile, await at.read(path))
   }
   const r = spawnSync('node', [join(code, 'runner.js'), testsFile, join(code, folder),
     join(out, 'results.jsonl')], { encoding: 'utf8' })
@@ -133,7 +140,7 @@ function runTests (code, work, out, testsPath, folder) {
 }
 
 // Interpret the record with the deployed report.js; the report is report.md.
-function makeReport (code, out, scope) {
+function makeReport (out, scope) {
   const r = spawnSync('node', [join(code, 'report.js'), repo, scope], { encoding: 'utf8' })
   if (r.status !== 0) {
     writeFileSync(join(out, 'error.txt'), r.stderr)
