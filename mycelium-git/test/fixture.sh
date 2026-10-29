@@ -7,7 +7,7 @@ export GIT_AUTHOR_NAME=fixture GIT_AUTHOR_EMAIL=fixture@localhost
 export GIT_COMMITTER_NAME=fixture GIT_COMMITTER_EMAIL=fixture@localhost
 export GIT_AUTHOR_DATE='2026-01-01T00:00:00Z' GIT_COMMITTER_DATE='2026-01-01T00:00:00Z'
 rm -rf "$dir"
-git init -q -b main "$dir"
+git init -q --bare -b main "$dir"
 cd "$dir"
 blob() { printf '%s' "$1" | git hash-object -w --stdin; }
 docs=$(printf '100644 blob %s\ta\n100644 blob %s\tb\n' "$(blob A)" "$(blob B)" | git mktree)
