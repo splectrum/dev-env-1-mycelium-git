@@ -26,6 +26,12 @@ test('validate: broken rules throw', () => {
   assert.throws(() => validate(42), TypeError)
 })
 
+test('validate: star steps', () => {
+  assert.equal(validate('/main/*/a//', { star: true }), '/main/*/a')
+  assert.throws(() => validate('/main/*'), /bad segment '\*'/)
+  assert.throws(() => validate('/main/*x', { star: true }), /bad segment '\*x'/)
+})
+
 test('isUri: canonical only', () => {
   assert.ok(isUri('/main/x'))
   assert.ok(!isUri('/main/'))
