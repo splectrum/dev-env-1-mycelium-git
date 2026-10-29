@@ -61,6 +61,10 @@ Adapters, one per engine, each run against the same contract suite
 (`test/contract.js`):
 
 - `nativeBackend(gitdir)`: git's plumbing, the reference
+- `p2pgitBackend(gitdir, { fs })`: p2p-git, the embedded engine:
+  isomorphic-git stripped to plumbing (loose objects only, no working
+  tree, pluggable fs, for Bare with bare-fs or Hyperdrive). It keeps
+  isomorphic-git's API, so it shares that adapter (`isoStyleBackend`)
 - `isogitBackend(gitdir, { fs })`: isomorphic-git (1.44.8) over a
   filesystem, node's by default. For compatibility: the same repository,
   read and written by an engine that also runs where native git does not.
@@ -87,5 +91,5 @@ the same writes give the same oids on every engine (`test/engines.test.js`).
   the writes commit as `cli` at a fixed time, so their oids are stable too,
   and each line's state carries on to the next. `test/commands-isogit.txt`
   is the same on isomorphic-git (`--engine=isogit`), and
-  `test/commands-bare-native.txt` and `test/commands-bare-isogit.txt` are
-  the same on Bare, all with the same expectations
+  `test/commands-p2pgit.txt` on p2p-git, and `test/commands-bare-*.txt` the
+  same on Bare, all with the same expectations

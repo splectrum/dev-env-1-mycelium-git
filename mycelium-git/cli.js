@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Command line for mycelium-git, the test entry point.
-//   node cli.js [--engine=isogit] <op> ...           (default engine: native)
+//   node cli.js [--engine=isogit|p2pgit] <op> ...    (default engine: native)
 //   node cli.js select <repo> <path>                [path, node] pairs
 //   node cli.js read <repo> <path>                  the file's content, as text
 //   node cli.js put <repo> <branch> <path> <text>   one put, committed
@@ -17,12 +17,12 @@
 
 import process from 'node:process'
 import { validate, sameName } from '../mycelium-uri/index.js'
-import { nativeBackend, isogitBackend, openRepo, writer } from './index.js'
+import { nativeBackend, isogitBackend, p2pgitBackend, openRepo, writer } from './index.js'
 
 const argv = process.argv.slice(2)
 const engine = argv[0] && argv[0].startsWith('--engine=') ? argv.shift().slice(9) : 'native'
 const [op, dir, ...args] = argv
-const engines = { native: nativeBackend, isogit: isogitBackend }
+const engines = { native: nativeBackend, isogit: isogitBackend, p2pgit: p2pgitBackend }
 const commit = { author: { name: 'cli', email: 'cli@localhost' }, time: '2026-01-02T00:00:00Z' }
 const branch = name => validate('/' + name).slice(1)
 const writePath = path => validate(path)
