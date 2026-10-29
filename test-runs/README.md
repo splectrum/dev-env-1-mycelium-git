@@ -26,3 +26,6 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r17.bundle` | Case-insensitive URIs, names kept as stored (`README.md`): 72 of 72 met |
 | `2026-10-29-r18.bundle` | Case-insensitive lookup only at the boundary (`sameName`), exact names inside: 72 of 72 met |
 | `2026-10-29-r19.bundle` | Modules and machinery by id, no versions; the deployment lists the ids and carries the kick: 72 of 72 met |
+| `2026-10-29-r20.bundle` | All requests with the pinned machinery `ee55ef63`, as the reference for r21 |
+| `2026-10-29-r21.bundle` | The same with the machinery in development, reading through mycelium-git: identical report and records; validated as `015f3ca2-42cb-4250-8eda-98a7a0be68f8` |
+| `2026-10-29-r22.bundle` | Machinery pinned at `015f3ca2-42cb-4250-8eda-98a7a0be68f8`, found by its id: 72 of 72 met |
