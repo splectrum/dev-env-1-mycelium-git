@@ -82,7 +82,13 @@ top.
 - Consumer positions are the consumer's own state, kept in git.
 - Retention: clear blocks locally. Compaction (latest per key) is
   Hyperbee, not a log.
-- Not needed: brokers, ZooKeeper or KRaft, cluster-wide transactions.
+- No central broker cluster, ZooKeeper or KRaft: a single-writer,
+  signed log needs no leader to order writes or arbitrate replication.
+  But broker functions remain, taken on by peers: availability when the
+  producer is offline (always-on seeding peers; blind peers, data/blind),
+  discovery (Hyperswarm's DHT), and coordination of consumer groups (a
+  shared state such as Autobase, or a fixed rule). Retention and access
+  are each peer's own, and access comes from holding the keys.
 - Fits the unit model: a core is immutable up to its length, so a unit
   can record its input streams as (core key, length) next to its branch
   commits, and a rerun is exact for streams too.
