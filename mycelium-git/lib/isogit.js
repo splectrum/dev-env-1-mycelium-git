@@ -1,11 +1,16 @@
 // isomorphic-git backend: the backend contract on isomorphic-git, over a
 // filesystem (node's fs by default). For compatibility: the same repository,
 // read and written by an engine that also runs where native git does not.
+// isoStyleBackend serves any engine with isomorphic-git's API (p2p-git).
 
 import nodeFs from 'node:fs'
-import git from 'isomorphic-git'
+import isogit from 'isomorphic-git'
 
 export function isogitBackend (gitdir, { fs = nodeFs } = {}) {
+  return isoStyleBackend(isogit, gitdir, { fs })
+}
+
+export function isoStyleBackend (git, gitdir, { fs = nodeFs } = {}) {
   const at = { fs, gitdir }
   const seconds = time => Math.floor((time ? new Date(time) : new Date()).getTime() / 1000)
 

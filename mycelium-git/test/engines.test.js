@@ -4,7 +4,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { fixture } from './contract.js'
-import { isogitBackend, nativeBackend, writer } from '../index.js'
+import { isogitBackend, nativeBackend, p2pgitBackend, writer } from '../index.js'
 
 const author = { name: 'a', email: 'a@b' }
 const time = '2026-01-02T00:00:00Z'
@@ -40,8 +40,9 @@ async function scenario (make) {
   return out
 }
 
-test('native and isomorphic-git: same writes, same oids and outcomes', async () => {
+test('native, isomorphic-git and p2p-git: same writes, same oids and outcomes', async () => {
   const native = await scenario(nativeBackend)
   assert.equal(native.length, 7)
   assert.deepEqual(await scenario(isogitBackend), native)
+  assert.deepEqual(await scenario(p2pgitBackend), native)
 })
