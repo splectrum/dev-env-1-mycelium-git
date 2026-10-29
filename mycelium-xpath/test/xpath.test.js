@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { select, objectChildren } from '../index.js'
+import { sameName } from '../../mycelium-uri/index.js'
 
 const tree = JSON.parse(readFileSync(new URL('./tree.json', import.meta.url)))
 const kids = objectChildren
@@ -24,8 +25,10 @@ test('select: * steps', async () => {
   assert.deepEqual(await select(kids, tree, '/main/readme/*'), [])
 })
 
-test('select: names match without regard to case', async () => {
-  assert.deepEqual(await select(kids, tree, '/main/readme.md'), [['/main/README.md', 'convention']])
+test('select: exact by default, match for the boundary', async () => {
+  assert.deepEqual(await select(kids, tree, '/main/readme.md'), [])
+  assert.deepEqual(await select(kids, tree, '/main/README.md'), [['/main/README.md', 'convention']])
+  assert.deepEqual(await select(kids, tree, '/main/readme.md', sameName), [['/main/README.md', 'convention']])
 })
 
 test('async children', async () => {

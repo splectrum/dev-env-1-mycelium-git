@@ -78,6 +78,13 @@ export function split (uri, branches) {
   return matches[0]
 }
 
+// Whether a stored name is the one a canonical step names: URIs are
+// case-insensitive. For the boundary, to find stored names from an external
+// URI; inside, stored names match exactly.
+export function sameName (name, step) {
+  return name.toLowerCase() === step
+}
+
 // A valid URI's segments, without checking.
 function segmentsOf (uri) {
   return uri === '/' ? [] : uri.slice(1).split('/')

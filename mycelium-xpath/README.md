@@ -6,15 +6,17 @@ through `children(node)`, which returns a node's children as
 git tree is.
 
 Paths are `/`-separated from the root, and valid: they are validated at
-the boundary (`mycelium-uri`), not here, so they are lowercase. Names
-match without regard to case: `/main/readme.md` finds a stored
-`README.md`, returned with its own name. A `*` step matches every child.
+the boundary (`mycelium-uri`), not here. A `*` step matches every child.
+Names match exactly.
 
 ## API
 
-- `select(children, root, path)` → every node matching `path`, as
+- `select(children, root, path, match?)` → every node matching `path`, as
   `[path, node]` pairs, in the order `children` gives them. A plain path
-  gives zero or one pair; `/main/*/a` matches `a` in every child of `main`
+  gives zero or one pair; `/main/*/a` matches `a` in every child of `main`.
+  `match(name, step)` replaces exact matching. Only the boundary passes
+  one: `sameName` from `mycelium-uri`, to find the stored names of an
+  external URI once. Inside, paths are stored names and match exactly
 - `objectChildren(node)`: `children` for plain objects. An object is a
   folder; anything else is a leaf
 

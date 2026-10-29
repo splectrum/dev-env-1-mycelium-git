@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { isSegment, validate, isUri, parse, format, join, parent, split } from '../index.js'
+import { isSegment, validate, sameName, isUri, parse, format, join, parent, split } from '../index.js'
 
 test('isSegment', () => {
   for (const s of ['main', 'a-1', '0', 'phase-1', 'request.md', 'a.tar.gz']) assert.ok(isSegment(s), s)
@@ -34,6 +34,12 @@ test('validate: star steps', () => {
   assert.equal(validate('/main/*/a//', { star: true }), '/main/*/a')
   assert.throws(() => validate('/main/*'), /bad segment '\*'/)
   assert.throws(() => validate('/main/*x', { star: true }), /bad segment '\*x'/)
+})
+
+test('sameName', () => {
+  assert.ok(sameName('README.md', 'readme.md'))
+  assert.ok(sameName('readme.md', 'readme.md'))
+  assert.ok(!sameName('README.md', 'readme'))
 })
 
 test('isUri: canonical only', () => {

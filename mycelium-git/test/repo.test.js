@@ -5,6 +5,7 @@ import { mkdtempSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { nativeBackend, openRepo } from '../index.js'
+import { sameName } from '../../mycelium-uri/index.js'
 
 let repo
 before(() => {
@@ -33,7 +34,9 @@ test('into a branch', async () => {
 test('read', async () => {
   assert.equal((await repo.read('/main/readme')).toString(), 'hello')
   assert.equal((await repo.read('/overlay/config/docs/a')).toString(), 'conf')
-  assert.equal((await repo.read('/main/readme.md')).toString(), 'convention')
+  assert.equal((await repo.read('/main/README.md')).toString(), 'convention')
+  await assert.rejects(repo.read('/main/readme.md'), /not a file/)
+  assert.equal((await repo.read('/main/readme.md', sameName)).toString(), 'convention')
   await assert.rejects(repo.read('/main/docs'), /not a file/)
   await assert.rejects(repo.read('/main/nope'), /not a file/)
 })
