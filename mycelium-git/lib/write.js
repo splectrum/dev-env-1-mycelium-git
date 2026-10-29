@@ -16,6 +16,15 @@ const LAYERS = ['main', 'pending', 'overlay', 'data', 'capability']
 // Permanent: never deleted.
 const PERMANENT = ['main', 'pending/default']
 
+// A layer's name: its first segment is a layer's, with more segments after
+// it, except main, which is a layer on its own.
+function layerName (name) {
+  const first = name.split('/')[0]
+  if (!LAYERS.includes(first) || (first === 'main' ? name !== 'main' : name === first)) {
+    throw new Error(`not a layer: ${name}`)
+  }
+}
+
 export function writer (backend) {
   const branches = async () => Object.fromEntries(await backend.listBranches())
   const head = async branch => (await branches())[branch]
@@ -35,14 +44,31 @@ export function writer (backend) {
     // A new layer: an orphan branch whose first commit has an empty tree.
     // Its first segment must be a layer's (main is a layer of its own).
     async createLayer (name, message, { author, time } = {}) {
-      const first = name.split('/')[0]
-      if (!LAYERS.includes(first)) throw new Error(`not a layer: ${name}`)
-      if (first === 'main' ? name !== 'main' : name === first) throw new Error(`not a layer: ${name}`)
+      layerName(name)
       await free(name)
       const tree = await backend.writeTree([])
       const oid = await backend.writeCommit({ tree, parents: [], message, author, time })
       await backend.updateBranch(name, oid, null)
       return oid
+    },
+
+    // A layer taken in from another repository, with its history: the branch
+    // at a commit whose objects are already here (see transfer). New, it
+    // follows the layer rules; existing, it only moves forward: the new
+    // commit must hold the current one in its history.
+    async importLayer (name, commit) {
+      if (!await backend.hasObject(commit)) throw new Error(`no commit: ${commit}`)
+      const current = await head(name)
+      if (current) {
+        if (current === commit) return commit
+        if (!await backend.isAncestor(current, commit)) throw new Error(`diverged: ${name}`)
+        await backend.updateBranch(name, commit, current)
+        return commit
+      }
+      layerName(name)
+      await free(name)
+      await backend.updateBranch(name, commit, null)
+      return commit
     },
 
     // The execution branch of a target: execute/<target>, from its head.

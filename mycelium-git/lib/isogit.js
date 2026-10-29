@@ -36,7 +36,21 @@ export function isoStyleBackend (git, gitdir, { fs = nodeFs } = {}) {
       return Buffer.from((await git.readBlob({ ...at, oid })).blob)
     },
 
+    // Raw objects, for copying between repositories: { type, object }.
+    async readObject (oid) {
+      const { type, object } = await git.readObject({ ...at, oid, format: 'content' })
+      return { type, object: Buffer.from(object) }
+    },
+
+    async hasObject (oid) {
+      try { await git.readObject({ ...at, oid, format: 'deflated' }); return true } catch { return false }
+    },
+
     // --- Writing ---
+
+    async writeObject (type, bytes) {
+      return git.writeObject({ ...at, type, object: Buffer.from(bytes), format: 'content' })
+    },
 
     async writeBlob (bytes) {
       return git.writeBlob({ ...at, blob: Buffer.from(bytes) })

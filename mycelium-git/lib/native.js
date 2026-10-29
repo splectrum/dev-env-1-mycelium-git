@@ -60,7 +60,21 @@ export function nativeBackend (dir) {
       return git(['cat-file', 'blob', oid], { buffer: true })
     },
 
+    // Raw objects, for copying between repositories: { type, object }.
+    async readObject (oid) {
+      const type = (await git(['cat-file', '-t', oid])).trim()
+      return { type, object: await git(['cat-file', type, oid], { buffer: true }) }
+    },
+
+    async hasObject (oid) {
+      return (await run(['cat-file', '-e', oid], { ok: [0, 1, 128] })).code === 0
+    },
+
     // --- Writing ---
+
+    async writeObject (type, bytes) {
+      return (await git(['hash-object', '-t', type, '-w', '--stdin', '--literally'], { input: bytes })).trim()
+    },
 
     async writeBlob (bytes) {
       return (await git(['hash-object', '-w', '--stdin'], { input: bytes })).trim()

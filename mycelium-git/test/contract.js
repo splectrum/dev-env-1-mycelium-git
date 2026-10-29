@@ -172,6 +172,29 @@ export function contract (name, makeBackend) {
     await assert.rejects(w.deleteBranch('nope', 'main'), /no branch: nope/)
   })
 
+  test(`${name}: raw objects: read, write, has`, async () => {
+    const main = await head('main')
+    const { type, object } = await wb.readObject(main)
+    assert.equal(type, 'commit')
+    assert.equal(await wb.writeObject(type, object), main)
+    assert.ok(await wb.hasObject(main))
+    assert.ok(!await wb.hasObject('0123456789012345678901234567890123456789'))
+  })
+
+  test(`${name}: importLayer: new under the layer rules, existing only forward`, async () => {
+    const start = await head('data/sets')
+    const c = await w.change('data/sets')
+    await c.put('/c.md', 'c')
+    const next = await c.commit('Put', { author, time })
+    await assert.rejects(w.importLayer('data/copy', '0123456789012345678901234567890123456789'), /no commit/)
+    assert.equal(await w.importLayer('data/copy', start), start)
+    assert.equal(await w.importLayer('data/copy', start), start)
+    assert.equal(await w.importLayer('data/copy', next), next)
+    await assert.rejects(w.importLayer('data/copy', start), /diverged: data\/copy/)
+    await assert.rejects(w.importLayer('other/x', start), /not a layer/)
+    await assert.rejects(w.importLayer('data/copy/x', start), /not a leaf/)
+  })
+
   test(`${name}: merge: conflicts throw`, async () => {
     await wb.updateBranch('side', await head('main'), null)
     const a = await w.change('main')
