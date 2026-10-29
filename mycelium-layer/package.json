@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "fs": "npm:bare-node-fs@1.0.2",
+    "os": "npm:bare-node-os@1.0.1",
     "path": "npm:bare-node-path@1.0.1",
     "process": "npm:bare-node-process@1.0.1"
   }
