@@ -15,6 +15,7 @@ node cli.js select fixture /main/*x => {"error":"bad segment '*x' in /main/*x"}
 node cli.js read fixture /main/readme => {"result":"hello"}
 node cli.js read fixture /main//readme => {"result":"hello"}
 node cli.js read fixture /overlay/config/docs/a => {"result":"conf"}
+node cli.js read fixture /pending/default/pending/r1/request.md => {"result":"# Request: r1"}
 node cli.js read fixture /main/docs => {"error":"not a file: /main/docs"}
 node cli.js read fixture /main/nope => {"error":"not a file: /main/nope"}
 node cli.js read fixture /main/* => {"error":"bad segment '*' in /main/*"}
