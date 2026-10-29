@@ -16,12 +16,16 @@ test('select: plain steps', async () => {
 
 test('select: * steps', async () => {
   assert.deepEqual((await select(kids, tree, '/main/*')).map(([p]) => p),
-    ['/main/readme', '/main/docs', '/main/src'])
+    ['/main/readme', '/main/README.md', '/main/docs', '/main/src'])
   assert.deepEqual(await select(kids, tree, '/main/*/a'),
     [['/main/docs/a', 'A'], ['/main/src/a', 'srcA']])
   assert.deepEqual(await select(kids, tree, '/*/*/docs/a'), [['/overlay/config/docs/a', 'conf']])
   assert.deepEqual(await select(kids, tree, '/empty/*'), [])
   assert.deepEqual(await select(kids, tree, '/main/readme/*'), [])
+})
+
+test('select: names match without regard to case', async () => {
+  assert.deepEqual(await select(kids, tree, '/main/readme.md'), [['/main/README.md', 'convention']])
 })
 
 test('async children', async () => {

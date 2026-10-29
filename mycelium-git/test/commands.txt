@@ -2,15 +2,15 @@
 # One invocation per line: <command> <arg>... => <expectation>
 # The first line builds the test repository, with stable oids.
 sh test/fixture.sh fixture => exit 0
-node cli.js select fixture /* => {"result":[["/main",{"type":"tree","oid":"c3984eecf78bda3a5d0b680ce18e14f68187d631"}],["/overlay",{"type":"branches","prefix":"overlay/"}],["/pending",{"type":"branches","prefix":"pending/"}]]}
-node cli.js select fixture /*/* => {"result":[["/main/docs",{"type":"tree","oid":"a8d705f02f6f3fde0476c946f5f22cc5fb58238c"}],["/main/readme",{"type":"blob","oid":"b6fc4c620b67d95f953a5c1c1230aaab5db5a1b0"}],["/overlay/config",{"type":"tree","oid":"c5ecd13f53fb1529c8438469d7bb261b5640733a"}],["/pending/default",{"type":"tree","oid":"b3175c7bc5d9a9eeb7db3c7ea0a4a34f4b09aca9"}]]}
-node cli.js select fixture /main/* => {"result":[["/main/docs",{"type":"tree","oid":"a8d705f02f6f3fde0476c946f5f22cc5fb58238c"}],["/main/readme",{"type":"blob","oid":"b6fc4c620b67d95f953a5c1c1230aaab5db5a1b0"}]]}
+node cli.js select fixture /* => {"result":[["/main",{"type":"tree","oid":"8255a8aef576dc4794a530c47dc3e45aa42a3403"}],["/overlay",{"type":"branches","prefix":"overlay/"}],["/pending",{"type":"branches","prefix":"pending/"}]]}
+node cli.js select fixture /*/* => {"result":[["/main/README.md",{"type":"blob","oid":"c73a75548372203286bac9fe4010e7b0f9d1e814"}],["/main/docs",{"type":"tree","oid":"a8d705f02f6f3fde0476c946f5f22cc5fb58238c"}],["/main/readme",{"type":"blob","oid":"b6fc4c620b67d95f953a5c1c1230aaab5db5a1b0"}],["/overlay/config",{"type":"tree","oid":"c5ecd13f53fb1529c8438469d7bb261b5640733a"}],["/pending/default",{"type":"tree","oid":"b3175c7bc5d9a9eeb7db3c7ea0a4a34f4b09aca9"}]]}
+node cli.js select fixture /main/* => {"result":[["/main/README.md",{"type":"blob","oid":"c73a75548372203286bac9fe4010e7b0f9d1e814"}],["/main/docs",{"type":"tree","oid":"a8d705f02f6f3fde0476c946f5f22cc5fb58238c"}],["/main/readme",{"type":"blob","oid":"b6fc4c620b67d95f953a5c1c1230aaab5db5a1b0"}]]}
 node cli.js select fixture /main/docs/a => {"result":[["/main/docs/a",{"type":"blob","oid":"8c7e5a667f1b771847fe88c01c3de34413a1b220"}]]}
 node cli.js select fixture /pending/default/pending/* => {"result":[["/pending/default/pending/r1",{"type":"tree","oid":"1b609917d35fac7434d8747812c214cf043c2a80"}]]}
 node cli.js select fixture /*/*/docs/a => {"result":[["/overlay/config/docs/a",{"type":"blob","oid":"053be0a22ab7f6e530b18cc41b51d85436838377"}]]}
 node cli.js select fixture /main/nope => {"result":[]}
 node cli.js select fixture /main//docs/ => {"result":[["/main/docs",{"type":"tree","oid":"a8d705f02f6f3fde0476c946f5f22cc5fb58238c"}]]}
-node cli.js select fixture /Main => {"error":"bad segment 'Main' in /Main"}
+node cli.js select fixture /Main => {"result":[["/main",{"type":"tree","oid":"8255a8aef576dc4794a530c47dc3e45aa42a3403"}]]}
 node cli.js select fixture /main/*x => {"error":"bad segment '*x' in /main/*x"}
 node cli.js read fixture /main/readme => {"result":"hello"}
 node cli.js read fixture /main//readme => {"result":"hello"}
@@ -20,3 +20,5 @@ node cli.js read fixture /main/docs => {"error":"not a file: /main/docs"}
 node cli.js read fixture /main/nope => {"error":"not a file: /main/nope"}
 node cli.js read fixture /main/* => {"error":"bad segment '*' in /main/*"}
 node cli.js frobnicate fixture /main => {"error":"unknown op: frobnicate"}
+node cli.js read fixture /main/README.md => {"result":"convention"}
+node cli.js select fixture /Main/readme.MD => {"result":[["/main/README.md",{"type":"blob","oid":"c73a75548372203286bac9fe4010e7b0f9d1e814"}]]}

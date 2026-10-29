@@ -3,7 +3,9 @@
 // or null for a leaf. It may be async (a git tree is read from storage).
 //
 // Paths are '/'-separated from the root, and valid: they are validated at
-// the boundary, not here. A '*' step matches every child.
+// the boundary, not here: canonical, so lowercase. Names match without regard
+// to case, so a stored 'README.md' is found by 'readme.md' and returned with
+// its own name. A '*' step matches every child.
 
 // All nodes matching a path, as [path, node] pairs, in the order children()
 // gives them. A plain path gives zero or one pair.
@@ -13,7 +15,7 @@ export async function select (children, root, path) {
     const next = []
     for (const [at, node] of found) {
       for (const [n, child] of (await children(node)) || []) {
-        if (name === '*' || n === name) next.push([at + '/' + n, child])
+        if (name === '*' || n.toLowerCase() === name) next.push([at + '/' + n, child])
       }
     }
     found = next
