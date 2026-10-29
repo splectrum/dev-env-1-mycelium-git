@@ -5,20 +5,8 @@
 // Paths are '/'-separated from the root, and valid: they are validated at
 // the boundary, not here. A '*' step matches every child.
 
-// The node at a path, or undefined.
-export async function resolve (children, root, path) {
-  let node = root
-  for (const name of steps(path)) {
-    const entries = await children(node)
-    const entry = entries && entries.find(([n]) => n === name)
-    if (!entry) return undefined
-    node = entry[1]
-  }
-  return node
-}
-
-// All nodes matching a path with '*' steps, as [path, node] pairs, in the
-// order children() gives them.
+// All nodes matching a path, as [path, node] pairs, in the order children()
+// gives them. A plain path gives zero or one pair.
 export async function select (children, root, path) {
   let found = [['', root]]
   for (const name of steps(path)) {
