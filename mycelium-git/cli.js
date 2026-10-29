@@ -15,6 +15,7 @@
 // lowercase form: inside our repositories every name is lowercase. A branch
 // name is validated as a URI.
 
+import process from 'node:process'
 import { validate, sameName } from '../mycelium-uri/index.js'
 import { nativeBackend, isogitBackend, openRepo, writer } from './index.js'
 

@@ -1,5 +1,6 @@
 # Test commands for mycelium-git on native git, for a test run, run from
-# mycelium-git/. commands-isogit.txt is the same on isomorphic-git.
+# mycelium-git/. The other commands-*.txt are the same on other engines and
+# runtimes, with the same expectations.
 # One invocation per line: <command> <arg>... => <expectation>
 # The first line builds the test repository, with stable oids.
 sh test/fixture.sh fixture => exit 0
