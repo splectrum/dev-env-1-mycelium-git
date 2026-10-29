@@ -1,6 +1,6 @@
 {
   "name": "mycelium-git",
-  "id": "566f4cd9-4f5c-482e-8881-ee63052c0f33",
+  "id": "0ee02ac1-f825-43f1-a44d-1de3c6bccca5",
   "description": "The repository rules over a backend contract",
   "type": "module",
   "exports": "./index.js",
