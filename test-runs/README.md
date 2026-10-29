@@ -39,3 +39,4 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r30.bundle` | Four engine and runtime combinations (native and isomorphic-git, on Node and on Bare), pinned machinery: the reference for r31 |
 | `2026-10-29-r31.bundle` | The same with the machinery recording the Bare version: identical; validated as `7afe7327-3cdc-4834-a4ff-640056b483be` |
 | `2026-10-29-r32.bundle` | Machinery pinned at `7afe7327-3cdc-4834-a4ff-640056b483be`: 215 of 215 met |
+| `2026-10-29-r33.bundle` | mycelium-git on three engines (native, isomorphic-git, p2p-git), each on Node and on Bare: the same 41 invocations met on all six |
