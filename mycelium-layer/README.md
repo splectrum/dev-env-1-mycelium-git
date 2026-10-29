@@ -53,9 +53,31 @@ the tree: deployed again, it gives the same tree.
 are. A request already there is refused, because requests are only added.
 It resolves `{ commit, files }`.
 
-Executing requests is still the test-run machinery (`test-run/execute.js`).
-
 `test-run/request.sh` puts requests into instances with it.
+
+## layer/request: execution
+
+`executeRequests({ backend, capability, author, environment, plan, handle })`
+is the request flow. Each pending request (one on `pending/default` with no
+response on `main` yet) is executed on a fixed data state and answered on
+`execute/main`, which is merged into `main` with a plain merge. It resolves
+the names of the requests executed, in order.
+
+- The unit is recorded as `unit.json`: the invocation, every state it ran
+  on by commit (taken before anything changes), the `environment` given,
+  and the nondeterministic inputs (run id, times, work folder). That's
+  enough to rerun it.
+- What a request means is not the flow's. `plan([{ name, text }])` chooses
+  and orders the requests (by default, all, by name), and
+  `handle(request, { state, work, out })` executes one. It writes its
+  response files into `out` and resolves `{ outcome, body }`.
+- The response is `main:responses/<name>/`: the handler's files,
+  `unit.json` and `response.md`. `pending/default` is not written, since it
+  holds the requests.
+
+`test-run/execute.js` runs test runs with it, adding the test-run
+specifics: `Run:` and `Report:` requests, runs before reports, and the
+runner and the report as handlers.
 
 ## layer/export
 

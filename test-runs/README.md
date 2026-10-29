@@ -53,3 +53,6 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r41.bundle` | Request intake (mycelium-layer) on every engine and on Bare; request.sh on it: all met |
 | `2026-10-29-r40-asked.bundle` | r40 inflated, a report request put in with request.sh on request intake (a second one refused), executed by the run itself |
 | `2026-10-29-r42.bundle` | layer/export and bundles on the backend contract (mycelium-git writeBundle, readBundle) across engines and on Bare: all met |
+| `2026-10-29-r43.bundle` | All requests, self-tests included, with the pinned machinery: the reference for r44 |
+| `2026-10-29-r44.bundle` | The same with the request flow as layer/request's executeRequests: identical report, records, files and history; validated as `46ba2e65-5221-43f2-96cd-6dec6c82d35c` |
+| `2026-10-29-r45.bundle` | Machinery pinned at `46ba2e65-5221-43f2-96cd-6dec6c82d35c`: all met |
