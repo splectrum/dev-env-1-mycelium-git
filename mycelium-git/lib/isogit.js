@@ -64,6 +64,14 @@ export function isoStyleBackend (git, gitdir, { fs = nodeFs } = {}) {
       await git.writeRef({ ...at, ref, value: oid, force: true })
     },
 
+    // Compare, then delete: as updateBranch, no atomic compare-and-swap.
+    async deleteBranch (name, expected) {
+      const ref = `refs/heads/${name}`
+      const current = await git.resolveRef({ ...at, ref })
+      if (current !== expected) throw new Error(`git update-ref: ${ref} is at ${current}, expected ${expected}`)
+      await git.deleteRef({ ...at, ref })
+    },
+
     // --- History and merge ---
 
     async mergeBase (a, b) {

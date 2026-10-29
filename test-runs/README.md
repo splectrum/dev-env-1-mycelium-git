@@ -43,3 +43,4 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-pin-check.bundle` | The check run after the machinery was first pinned (by commit, `673120a`): all met |
 | `2026-10-29-r11-redeploy.bundle` | r11 inflated and given a second deploy into `capability/test` |
 | `2026-10-29-r28-asked.bundle` | r28 inflated as a bare instance and asked for a report again (`report-again`), executed by the run itself |
+| `2026-10-29-r34.bundle` | mycelium-git branch and layer rules (create layer, execution branch, delete once merged) on three engines, on Node and Bare: all met |

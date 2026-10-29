@@ -91,6 +91,11 @@ export function nativeBackend (dir) {
       await git(['update-ref', `refs/heads/${name}`, oid, expected || ZERO])
     },
 
+    // Delete a branch only if it still points at expected.
+    async deleteBranch (name, expected) {
+      await git(['update-ref', '-d', `refs/heads/${name}`, expected])
+    },
+
     // --- History and merge ---
 
     // The commit two commits share, or null: unrelated histories.

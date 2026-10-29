@@ -33,6 +33,13 @@ async function scenario (make) {
   out.push(await error(() => w.merge('side', 'main', 'm', { author, time })))
   out.push(await error(() => w.merge('overlay/config', 'main', 'm', { author, time })))
 
+  out.push(await w.createLayer('data/sets', 'Create data/sets', { author, time }))
+  out.push(await w.createExecution('data/sets'))
+  await put('execute/data/sets', '/a.md', 'a')
+  out.push(await w.merge('execute/data/sets', 'data/sets', 'Merge', { author, time }))
+  await w.deleteBranch('execute/data/sets', 'data/sets')
+  out.push(JSON.stringify(await b.listBranches()))
+
   const stale = await w.change('main')
   await stale.put('/b', 'b')
   await put('main', '/a', 'a')
@@ -42,7 +49,7 @@ async function scenario (make) {
 
 test('native, isomorphic-git and p2p-git: same writes, same oids and outcomes', async () => {
   const native = await scenario(nativeBackend)
-  assert.equal(native.length, 7)
+  assert.equal(native.length, 11)
   assert.deepEqual(await scenario(isogitBackend), native)
   assert.deepEqual(await scenario(p2pgitBackend), native)
 })
