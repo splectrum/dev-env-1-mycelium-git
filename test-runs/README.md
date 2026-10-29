@@ -46,3 +46,5 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r34.bundle` | mycelium-git branch and layer rules (create layer, execution branch, delete once merged) on three engines, on Node and Bare: all met |
 | `2026-10-29-r35.bundle` | layer/import (mycelium-layer) across engines and on Bare; mycelium-git transfer and importLayer: all met |
 | `2026-10-29-r36.bundle` | repo/publish (mycelium-repo) with split on the backend contract, across engines and on Bare: all met |
+| `2026-10-29-r37.bundle` | repo/sync (mycelium-repo): every status, across engines and on Bare: all met |
+| `2026-10-29-r38.bundle` | The first instance deployed with layer/deploy (deploy.sh on mycelium-layer); deploy tests on every engine and on Bare: all met |
