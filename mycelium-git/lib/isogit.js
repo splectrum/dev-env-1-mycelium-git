@@ -15,6 +15,11 @@ export function isoStyleBackend (git, gitdir, { fs = nodeFs } = {}) {
   const seconds = time => Math.floor((time ? new Date(time) : new Date()).getTime() / 1000)
 
   return {
+    // A new repository: bare, with main as its default branch.
+    async init () {
+      await git.init({ ...at, bare: true, defaultBranch: 'main' })
+    },
+
     // --- Reading ---
 
     async listBranches () {

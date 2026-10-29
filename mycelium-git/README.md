@@ -83,6 +83,8 @@ checked on this repository's own history too).
 
 ## Backend contract
 
+- Creating: `init()`, a new bare repository with `main` as its default
+  branch
 - Reading: `listBranches()` → `[name, commit]` pairs;
   `readCommit(oid)` → `{ tree, parents, message }`; `readTree(oid)` →
   entries `{ name, mode, type, oid }`; `readBlob(oid)` → bytes

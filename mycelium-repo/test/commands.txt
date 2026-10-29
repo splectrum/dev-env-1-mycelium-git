@@ -1,9 +1,8 @@
 # Test commands for mycelium-repo, for a test run, run from mycelium-repo/.
-# One invocation per line: <command> <arg>... => <expectation>
 # a is mycelium-git's fixture with a package folder pkg/; b is an empty
 # product repository: published and received. c is another fixture, synced
-# to an empty remote d. Across engines and on Bare; mycelium-git's CLI
-# prepares and reads.
+# to an empty remote d. e, f and g are seeded from test/template. Across
+# engines and on Bare; mycelium-git's CLI prepares and reads.
 sh ../mycelium-git/test/fixture.sh a => exit 0
 git init -q --bare -b main b => exit 0
 node ../mycelium-git/cli.js put a main /pkg/a.md a => {"result":"8d1990d14bf0622444ed17523349992a47f75b85"}
@@ -39,3 +38,11 @@ node ../mycelium-git/cli.js create-layer d data/elsewhere => {"result":"4d69ae08
 bare cli.js --engine=p2pgit sync c d => {"result":{"execute/main":"same","main":"advanced","overlay/config":"remote-ahead","pending/default":"diverged","data/elsewhere":"remote-only"}}
 node ../mycelium-git/cli.js read d /main/a.md => {"result":"a"}
 node ../mycelium-git/cli.js select d /pending/default/ours.md => {"result":[]}
+# Seed.
+node cli.js seed e test/template => {"result":{"main":"0e81e7d1523d168fbf572b4b9dd0c5b12fb141cf","overlay/config":"d76438443fa1ed886bfb74def835449b02fc7a3c","pending/default":"4aeb4c28ba25e42470b6a3e8b113604fc6256c7d","execute/main":"0e81e7d1523d168fbf572b4b9dd0c5b12fb141cf"}}
+node ../mycelium-git/cli.js select e /*/* => {"result":[["/execute/main",{"type":"tree","oid":"e913eaf1f5e5aeffdc6a403d0ff09420e6310a87"}],["/main/readme.md",{"type":"blob","oid":"a9eb24cf182faf7c81e5dd23ef88549e03bba2e5"}],["/overlay/config",{"type":"tree","oid":"b12123fcc4698e2e4e46869d28b1043001dd3cf8"}],["/pending/default",{"type":"tree","oid":"f8e292a7927b5566348bbea9135b7b238dd98555"}]]}
+node ../mycelium-git/cli.js read e /pending/default/pending/r1/request.md => {"result":"# Request: r1\n"}
+node cli.js seed e test/template => {"error":"not a new repository"}
+node cli.js --engine=p2pgit seed f test/template => {"result":{"main":"0e81e7d1523d168fbf572b4b9dd0c5b12fb141cf","overlay/config":"d76438443fa1ed886bfb74def835449b02fc7a3c","pending/default":"4aeb4c28ba25e42470b6a3e8b113604fc6256c7d","execute/main":"0e81e7d1523d168fbf572b4b9dd0c5b12fb141cf"}}
+bare cli.js --engine=isogit seed g test/template => {"result":{"main":"0e81e7d1523d168fbf572b4b9dd0c5b12fb141cf","overlay/config":"d76438443fa1ed886bfb74def835449b02fc7a3c","pending/default":"4aeb4c28ba25e42470b6a3e8b113604fc6256c7d","execute/main":"0e81e7d1523d168fbf572b4b9dd0c5b12fb141cf"}}
+node cli.js seed h test/template/overlay => {"error":"no main in template: test/template/overlay"}

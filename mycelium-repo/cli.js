@@ -3,16 +3,17 @@
 //   node cli.js [--engine=E] [--product-engine=E] publish <repo> <package> <product>
 //   node cli.js [--engine=E] receive <product>
 //   node cli.js [--engine=E] [--remote-engine=E] sync <repo> <remote>
+//   node cli.js [--engine=E] seed <new-repo> <template>
 // Engines: native (default), isogit, p2pgit; --product-engine and
-// --remote-engine are the other repository's (default the same). receive commits as 'cli' at a
-// fixed time, so its oids are stable.
+// --remote-engine are the other repository's (default the same). receive
+// and seed commit as 'cli' at a fixed time, so their oids are stable.
 // Prints the outcome as one JSON line: {"result": ...}, or {"error": "..."}
 // with exit 1. Names come in from outside: validated here.
 
 import process from 'node:process'
 import { validate } from '../mycelium-uri/index.js'
 import { nativeBackend, isogitBackend, p2pgitBackend } from '../mycelium-git/index.js'
-import { publish, receive, sync } from './index.js'
+import { publish, receive, sync, seed } from './index.js'
 
 const engines = { native: nativeBackend, isogit: isogitBackend, p2pgit: p2pgitBackend }
 const argv = process.argv.slice(2)
@@ -46,6 +47,14 @@ try {
     })
   } else if (op === 'sync') {
     result = await sync({ repo: engines[engine](args[0]), remote: engines[remoteEngine](args[1]) })
+  } else if (op === 'seed') {
+    result = await seed({
+      backend: engines[engine](args[0]),
+      template: args[1],
+      source: args[1],
+      author: { name: 'cli', email: 'cli@localhost' },
+      time: '2026-01-02T00:00:00Z'
+    })
   } else {
     throw new Error(`unknown op: ${op}`)
   }

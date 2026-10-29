@@ -2,6 +2,7 @@
 // Command line for mycelium-layer, the test entry point.
 //   node cli.js [--engine=E] [--from-engine=E] import <repo> <from-repo> <branch> [as]
 //   node cli.js [--engine=E] deploy <repo> <layer> <folder>
+//   node cli.js [--engine=E] extract <repo> <layer> <path> <folder>
 // Engines: native (default), isogit, p2pgit; --engine is the receiving
 // repository's, --from-engine the other's (default the same).
 // deploy commits as 'cli' at a fixed time, so its oids are stable.
@@ -11,7 +12,7 @@
 import process from 'node:process'
 import { validate } from '../mycelium-uri/index.js'
 import { nativeBackend, isogitBackend, p2pgitBackend } from '../mycelium-git/index.js'
-import { importLayer, deploy } from './index.js'
+import { importLayer, deploy, extract } from './index.js'
 
 const engines = { native: nativeBackend, isogit: isogitBackend, p2pgit: p2pgitBackend }
 const argv = process.argv.slice(2)
@@ -46,6 +47,9 @@ try {
       author: { name: 'cli', email: 'cli@localhost' },
       time: '2026-01-02T00:00:00Z'
     })
+  } else if (op === 'extract') {
+    const [layer, path, folder] = args
+    result = await extract({ backend: engines[engine](dir), layer: branch(layer), path: validate(path), folder })
   } else {
     throw new Error(`unknown op: ${op}`)
   }
