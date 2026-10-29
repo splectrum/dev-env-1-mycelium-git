@@ -8,6 +8,7 @@
 #                    then the given request dirs (e.g. test-run/requests/report-runs)
 #   execute/main     from main
 # and the kick .git/hooks/execute, which runs execute.js as deployed.
+# The machinery comes from its pinned version: see deploy.sh.
 set -eu
 dir=$1
 shift
@@ -38,6 +39,6 @@ for req in "$@"; do "$src/test-run/request.sh" "$dir" "$src/$req" >/dev/null; do
 
 git -C "$dir" branch execute/main main
 git -C "$dir" reset -q --hard
-cp "$src/test-run/hook.sh" "$dir/.git/hooks/execute"
+git -C "$src" show "${MACHINERY:-$(cat "$src/test-run/machinery")}:test-run/hook.sh" > "$dir/.git/hooks/execute"
 chmod +x "$dir/.git/hooks/execute"
 echo "seeded $dir"
