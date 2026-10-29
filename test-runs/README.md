@@ -50,3 +50,5 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r38.bundle` | The first instance deployed with layer/deploy (deploy.sh on mycelium-layer); deploy tests on every engine and on Bare: all met |
 | `2026-10-29-r39.bundle` | layer/extract (mycelium-layer), the round trip extract then deploy, on every engine and on Bare: all met |
 | `2026-10-29-r40.bundle` | The first instance seeded with repo/seed (seed.sh on mycelium-repo); seed tests on every engine and on Bare: all met |
+| `2026-10-29-r41.bundle` | Request intake (mycelium-layer) on every engine and on Bare; request.sh on it: all met |
+| `2026-10-29-r40-asked.bundle` | r40 inflated, a report request put in with request.sh on request intake (a second one refused), executed by the run itself |
