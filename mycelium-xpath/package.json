@@ -1,0 +1,9 @@
+{
+  "name": "mycelium-xpath",
+  "version": "0.1.0",
+  "description": "Navigate a tree by path, generic",
+  "type": "module",
+  "exports": "./index.js",
+  "scripts": { "test": "node --test test/*.test.js" },
+  "license": "MIT"
+}

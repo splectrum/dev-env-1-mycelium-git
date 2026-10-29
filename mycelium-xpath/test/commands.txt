@@ -1,0 +1,17 @@
+# Test commands for mycelium-xpath, for a test run, run from mycelium-xpath/.
+# One invocation per line: <command> <arg>... => <expectation>
+# The tree is test/tree.json.
+node cli.js resolve test/tree.json /main/readme => {"result":"hello"}
+node cli.js resolve test/tree.json /main/docs => {"result":{"a":"A","b":"B"}}
+node cli.js resolve test/tree.json /main/nope => {"result":null}
+node cli.js resolve test/tree.json /main/readme/deeper => {"result":null}
+node cli.js select test/tree.json /main/readme => {"result":[["/main/readme","hello"]]}
+node cli.js select test/tree.json /main/nope => {"result":[]}
+node cli.js select test/tree.json /main/docs/* => {"result":[["/main/docs/a","A"],["/main/docs/b","B"]]}
+node cli.js select test/tree.json /main/*/a => {"result":[["/main/docs/a","A"],["/main/src/a","srcA"]]}
+node cli.js select test/tree.json /*/*/docs/a => {"result":[["/overlay/config/docs/a","conf"]]}
+node cli.js select test/tree.json /empty/* => {"result":[]}
+node cli.js select test/tree.json /main/readme/* => {"result":[]}
+node cli.js select test/tree.json /main/src/*/x => {"result":[["/main/src/lib/x","X"]]}
+node cli.js frobnicate test/tree.json /main => {"error":"unknown op: frobnicate"}
+node cli.js resolve test/missing.json /main => {"error":"ENOENT: no such file or directory, open 'test/missing.json'"}
