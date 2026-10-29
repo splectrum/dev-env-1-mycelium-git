@@ -46,10 +46,13 @@ stored names, valid when they come in.
   branch whose first commit has an empty tree. Its first segment must be a
   layer's: `main` (on its own), `pending`, `overlay`, `data` or
   `capability`. `execute` and `publish` branches are derived, not layers.
+- `advance(name, commit)`: a branch set to a commit whose objects are
+  here, forward only. An existing branch moves only to a commit that holds
+  its current one in its history; a new one must start with a reserved
+  segment and be a leaf.
 - `importLayer(name, commit)`: a layer taken in from another repository,
-  once its objects are here (`transfer`). New, it follows the layer rules;
-  existing, it only moves forward, so the new commit must hold the
-  current one in its history.
+  once its objects are here (`transfer`): `advance`, under the layer rules
+  for a new one.
 - `createExecution(target)`: `execute/<target>`, from the target's head.
 - `deleteBranch(name, into)`: only once merged, with its head in `into`'s
   history. `main` and `pending/default` are permanent.
@@ -64,6 +67,16 @@ stored names, valid when they come in.
 backend into another, whatever their engines, and resolves the number of
 objects copied. Objects are content-addressed, so each arrives under the
 same oid. One the target already has is skipped, with what it reaches.
+
+## Splitting a folder
+
+`split(backend, commit, folder)` splits a folder out of a commit's history,
+as `git subtree split` does: each commit whose folder changed becomes a
+commit of the folder alone, with the original author, committer and
+message. It resolves the split's head, or `null` if the folder never
+existed. It runs on the backend contract, so on every engine, and gives
+the same commits as native `git subtree split` (`test/split.test.js`;
+checked on this repository's own history too).
 
 ## Backend contract
 

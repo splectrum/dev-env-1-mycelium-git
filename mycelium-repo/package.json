@@ -1,0 +1,14 @@
+{
+  "name": "mycelium-repo",
+  "id": "cd669eb5-5802-4e6f-ad5d-335f91b80d0f",
+  "description": "Repository capabilities on mycelium-git: publish, and later sync and seed",
+  "type": "module",
+  "exports": "./index.js",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "process": "npm:bare-node-process@1.0.1"
+  }
+}
