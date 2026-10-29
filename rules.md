@@ -36,13 +36,19 @@
   layer that shares `main`'s paths. Composing branches into one view is
   left open, to be decided later.
 - Proposals, to be tested:
-  - Capabilities are global for now: `capability/default` holds the catalogue
-    of installed capabilities, by capability URI.
+  - A capability branch holds the installed modules: the code as deployed,
+    as plain folders. Inside, code calls code directly; there is no
+    catalogue.
+  - A categorisation by capability URI belongs to external APIs, where a
+    requester names what it wants and the name must be mapped to an
+    implementation. It is deferred to that level, together with the
+    local-scope overlay below.
   - Capability branches are named by purpose, not by library: a
     capability branch is a deployed environment holding the whole
     capability layer. The repository name already carries the phase.
   - Local scope is config, in its own overlay: `overlay/config`, by
-    `main`'s paths, referring to capabilities by URI.
+    `main`'s paths, referring to capabilities by URI (deferred, with the
+    categorisation, to the external API level).
   - A layer is *local* (a branch here), *imported* (fetched here with its
     history), or *virtual* (resolved from another repository at compose
     time, never stored here). Private config is a virtual layer from the
@@ -96,7 +102,7 @@ names, and all folder names, are free. Current scope; revised as needed.
 | `publish` | Packages split from `main` for publishing (proposal) |
 | `overlay` | Overlays on `main` |
 | `data` | Further data layers |
-| `capability` | The capability catalogue (proposal) |
+| `capability` | The installed modules, deployed (proposal) |
 | `default` | The permanent branch within a namespace (in `execute`, the target names it) |
 
 ## URIs
