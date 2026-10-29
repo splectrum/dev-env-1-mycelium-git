@@ -7,16 +7,18 @@ report request afterwards interprets the record. These scripts are what
 
 ```sh
 test-run/seed.sh /tmp/runs/r1 test-run/requests/report-runs
-/tmp/runs/r1/.git/hooks/execute               # the kick
+/tmp/runs/r1/hooks/execute               # the kick
 git -C /tmp/runs/r1 show main:responses/report-runs/report.md
 ```
 
+- Instances are bare repositories: no working tree, only objects and refs,
+  reached through requests.
 - `seed.sh` creates the instance: `main` (README only), `capability/test`
   (every module, `mycelium-*`, plus `runner.js`, `execute.js` and
   `report.js`), `pending/default` (a `test-<module>` request per module
   with `test/commands.txt`, then the given request dirs), `execute/main`,
   and the kick
-  `.git/hooks/execute`. Git never calls it; it is the trigger, and runs
+  `hooks/execute`. Git never calls it; it is the trigger, and runs
   `execute.js` as deployed on `capability/test`. Seed only from a
   committed dev state.
 - `execute.js` executes each request with no response on `main` yet: Run
@@ -80,8 +82,9 @@ go on the dev repository's `main`, in `test-runs/`, through `execute/main`
 like any other change. To ask a kept run something:
 
 ```sh
-test-run/inflate.sh r7.bundle /tmp/runs/r7     # all branches, plus the kick
+test-run/inflate.sh r7.bundle /tmp/runs/r7     # all branches, plus the kick (--checkout
+                                               # for runs kept up to r26)
 test-run/deploy.sh /tmp/runs/r7                # only if it needs new capabilities
 test-run/request.sh /tmp/runs/r7 <request-dir>
-/tmp/runs/r7/.git/hooks/execute
+/tmp/runs/r7/hooks/execute
 ```
