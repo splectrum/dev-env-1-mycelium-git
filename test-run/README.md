@@ -43,11 +43,15 @@ git -C /tmp/runs/r1 show main:responses/report-runs/report.md
 ## Pinned machinery
 
 The run machinery (`runner.js`, `execute.js`, `report.js` and the kick) is
-deployed from a validated version: the dev commit in `test-run/machinery`.
-Only the modules come from the current commit. A machinery change is
-tested by running it with `MACHINERY=HEAD`; once a run validates it, the
-pin moves. Kept runs carry their own machinery, so each one stays
-investigable as it was.
+deployed from a validated version. Each validated version is kept as data
+in `test-run/versions/<id>/`, named by a GUID, independent of this
+repository's git history. `test-run/machinery` holds the id in use. Only
+the modules come from the current commit.
+
+To change the machinery, develop it in `test-run/` and run it with
+`MACHINERY=dev`. Once a run validates it, copy it to a new
+`versions/<new id>/` and put the new id in `test-run/machinery`. Kept runs
+carry their own machinery, so each one stays investigable as it was.
 
 ## Requests
 
