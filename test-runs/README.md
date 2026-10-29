@@ -29,3 +29,6 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r20.bundle` | All requests with the pinned machinery `ee55ef63`, as the reference for r21 |
 | `2026-10-29-r21.bundle` | The same with the machinery in development, reading through mycelium-git: identical report and records; validated as `015f3ca2-42cb-4250-8eda-98a7a0be68f8` |
 | `2026-10-29-r22.bundle` | Machinery pinned at `015f3ca2-42cb-4250-8eda-98a7a0be68f8`, found by its id: 72 of 72 met |
+| `2026-10-29-r23.bundle` | All requests with the pinned machinery `015f3ca2-42cb-4250-8eda-98a7a0be68f8`, as the reference for r24 |
+| `2026-10-29-r24.bundle` | The same with the machinery writing through mycelium-git: identical report, records, files and history shape; validated as `f028269b-3f7d-4332-b726-6b7b72a3b930` |
+| `2026-10-29-r25.bundle` | Machinery pinned at `f028269b-3f7d-4332-b726-6b7b72a3b930`, mycelium-git with its write slice: all met |
