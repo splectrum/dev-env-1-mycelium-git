@@ -45,3 +45,9 @@ export function openRepo (backend) {
     }
   }
 }
+
+// The same backend with its branches fixed to given commits: a repository at a
+// recorded state, e.g. a unit's { branch: commit } map.
+export function pinned (backend, state) {
+  return { ...backend, listBranches: async () => Object.entries(state) }
+}

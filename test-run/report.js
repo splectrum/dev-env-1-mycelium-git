@@ -5,10 +5,11 @@
 // Expectations are on the test lines, after '=>':
 //   => <json>        the last JSON line of the output must equal it
 //   => exit <code>   the exit code must be <code> ('null': did not start)
-// Reads the repository only, at the states each run recorded; prints markdown.
+// Reads the repository only, through mycelium-git (deployed next to this
+// file), at the states each run recorded; prints markdown.
 
-import { spawnSync } from 'node:child_process'
 import { isDeepStrictEqual } from 'node:util'
+import { nativeBackend, openRepo, pinned } from './mycelium-git/index.js'
 
 const [repo, scope] = process.argv.slice(2)
 if (!repo || scope !== 'runs') {
@@ -16,21 +17,19 @@ if (!repo || scope !== 'runs') {
   process.exit(2)
 }
 
-const git = (...args) => {
-  const r = spawnSync('git', args, { cwd: repo, encoding: 'utf8', maxBuffer: 1 << 30 })
-  if (r.status !== 0) throw new Error(`git ${args.join(' ')}: ${r.stderr.trim()}`)
-  return r.stdout
-}
-const exists = spec => spawnSync('git', ['cat-file', '-e', spec], { cwd: repo }).status === 0
-const lines = text => text.split('\n').filter(Boolean)
+const backend = nativeBackend(repo)
+const now = openRepo(backend)
+const found = async path => (await now.select(path)).length > 0
+const text = async (at, path) => (await at.read(path)).toString()
+const lines = t => t.split('\n').filter(Boolean)
 
 const out = ['# Test report', '']
 const totals = { requests: 0, invocations: 0, met: 0, unmet: 0, unchecked: 0, incomplete: 0 }
 
-for (const name of exists('main:responses') ? lines(git('ls-tree', '-d', '--name-only', 'main:responses/')) : []) {
-  const base = `main:responses/${name}`
-  if (!exists(`${base}/unit.json`)) continue
-  const unit = JSON.parse(git('show', `${base}/unit.json`))
+for (const [base] of await now.select('/main/responses/*')) {
+  const name = base.split('/').pop()
+  if (!await found(`${base}/unit.json`)) continue
+  const unit = JSON.parse(await text(now, `${base}/unit.json`))
   const m = (unit.invocation.line || '').match(/^Run:\s*(\S+)\s+in\s+(\S+)/)
   if (!m) continue
   totals.requests++
@@ -38,18 +37,19 @@ for (const name of exists('main:responses') ? lines(git('ls-tree', '-d', '--name
   const cap = Object.keys(unit.state).find(b => b.startsWith('capability/'))
   out.push(`## ${name}`, '', `\`${testsPath}\` in \`${folder}\`, from \`${cap}\` at \`${unit.state[cap].slice(0, 7)}\`.`, '')
 
-  if (!exists(`${base}/results.jsonl`) || exists(`${base}/error.txt`)) {
+  if (!await found(`${base}/results.jsonl`) || await found(`${base}/error.txt`)) {
     totals.incomplete++
     out.push('**Did not complete.** No record of invocations to check.', '')
     continue
   }
 
   // The expectations, from the tests file at the state the run recorded.
-  const testsAt = testsPath.startsWith('pending/') ? unit.state['pending/default'] : unit.state[cap]
-  const testLines = git('show', `${testsAt}:${testsPath}`).split('\n')
+  const at = openRepo(pinned(backend, unit.state))
+  const testsAt = testsPath.startsWith('pending/') ? 'pending/default' : cap
+  const testLines = (await text(at, `/${testsAt}/${testsPath}`)).split('\n')
   const rows = []
   const counts = { met: 0, unmet: 0, unchecked: 0 }
-  for (const rec of lines(git('show', `${base}/results.jsonl`)).map(l => JSON.parse(l))) {
+  for (const rec of lines(await text(now, `${base}/results.jsonl`)).map(l => JSON.parse(l))) {
     const expectation = (testLines[rec.line - 1].split('=>')[1] || '').trim()
     const verdict = check(rec, expectation)
     counts[verdict.status]++
