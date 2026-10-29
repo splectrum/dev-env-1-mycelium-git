@@ -1,8 +1,9 @@
 # Test commands for mycelium-layer, for a test run, run from mycelium-layer/.
 # One invocation per line: <command> <arg>... => <expectation>
 # Two fixture repositories, a and b (mycelium-git's fixture); a layer made in a
-# is imported into b, across engines and on Bare. mycelium-git's CLI prepares
-# and reads.
+# is imported into b, across engines and on Bare. Then test/folder (a file, a
+# subfolder, an executable, a symbolic link) is deployed into a layer.
+# mycelium-git's CLI prepares and reads.
 sh ../mycelium-git/test/fixture.sh a => exit 0
 sh ../mycelium-git/test/fixture.sh b => exit 0
 node ../mycelium-git/cli.js create-layer a data/sets => {"result":"a9aad9fa479b3a0c38cd3d828107164f86a9a273"}
@@ -26,3 +27,12 @@ node ../mycelium-git/cli.js put b main /y.md y => {"result":"69909eb19b14de4ad22
 node cli.js import b a main => {"error":"diverged: main"}
 node cli.js frobnicate b a main => {"error":"unknown op: frobnicate"}
 node cli.js --engine=nope import b a main => {"error":"unknown engine: nope"}
+# Deploy.
+node cli.js deploy a capability/test test/folder => {"result":{"commit":"e22b8fb09f010c396d6b713e66901e77dd8455e5","tree":"ee0b9376c954e32a938cca874d27b14d91e8a829","files":4}}
+node ../mycelium-git/cli.js select a /capability/test/* => {"result":[["/capability/test/a.md",{"type":"blob","oid":"78981922613b2afb6025042ff6bd878ac1994e85"}],["/capability/test/link.md",{"type":"blob","oid":"20a3af7c429d48d8de45c0cd7182492e41e8fb9b"}],["/capability/test/run.sh",{"type":"blob","oid":"85ba14df52f8c72688537de6e7555fb402217b1e"}],["/capability/test/sub",{"type":"tree","oid":"4f15d37c30f58685fc01e8d241fc4f3cc35669e1"}]]}
+node ../mycelium-git/cli.js read a /capability/test/link.md => {"result":"sub/b.md"}
+node ../mycelium-git/cli.js read a /capability/test/sub/b.md => {"result":"b\n"}
+node cli.js --engine=p2pgit deploy b capability/test test/folder => {"result":{"commit":"e22b8fb09f010c396d6b713e66901e77dd8455e5","tree":"ee0b9376c954e32a938cca874d27b14d91e8a829","files":4}}
+bare cli.js --engine=isogit deploy b capability/test test/folder => {"result":{"commit":"a224a71bbbdb8145dbf405e8409ef25af5fe5908","tree":"ee0b9376c954e32a938cca874d27b14d91e8a829","files":4}}
+node cli.js deploy a other/x test/folder => {"error":"not a layer: other/x"}
+node cli.js deploy a capability/test test/nope => {"error":"ENOENT: no such file or directory, scandir 'test/nope'"}

@@ -37,6 +37,9 @@ stored names, valid when they come in.
   checkpoint. A file over a folder (or the other way round), a remove of
   something missing, or a missing branch throws. Folders left empty
   disappear.
+- `commitTree(branch, tree, message, { author, time })`: a checkpoint
+  replacing the branch's whole tree with one whose objects are here: a
+  deployment, for example.
 - `merge(from, into, message, { author, time, fastForward })`: a plain
   merge commit, or nothing when `into` already holds `from`. Disjoint
   layers are never merged, and conflicts throw. `fastForward` lets `into`

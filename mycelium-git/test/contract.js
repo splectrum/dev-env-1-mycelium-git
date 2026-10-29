@@ -172,6 +172,16 @@ export function contract (name, makeBackend) {
     await assert.rejects(w.deleteBranch('nope', 'main'), /no branch: nope/)
   })
 
+  test(`${name}: commitTree: a checkpoint replacing the whole tree`, async () => {
+    const before = await head('data/sets')
+    const blob = await wb.writeBlob('only')
+    const tree = await wb.writeTree([{ name: 'only.md', mode: '100644', type: 'blob', oid: blob }])
+    const oid = await w.commitTree('data/sets', tree, 'Replace', { author, time })
+    assert.deepEqual((await wb.readCommit(oid)).parents, [before])
+    assert.deepEqual((await wrepo.select('/data/sets/*')).map(([p]) => p), ['/data/sets/only.md'])
+    await assert.rejects(w.commitTree('nope', tree, 'x', { author, time }), /no branch: nope/)
+  })
+
   test(`${name}: raw objects: read, write, has`, async () => {
     const main = await head('main')
     const { type, object } = await wb.readObject(main)
