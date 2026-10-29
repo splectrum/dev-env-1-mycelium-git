@@ -4,7 +4,8 @@
 # is imported into b, across engines and on Bare. Then test/folder (a file, a
 # subfolder, an executable, a symbolic link) is deployed into a layer, extracted
 # back to disk and deployed again. A request (test/request) is taken into
-# pending/default. mycelium-git's CLI prepares and reads.
+# pending/default. A layer is exported as a bundle and imported from it.
+# mycelium-git's CLI prepares and reads.
 sh ../mycelium-git/test/fixture.sh a => exit 0
 sh ../mycelium-git/test/fixture.sh b => exit 0
 node ../mycelium-git/cli.js create-layer a data/sets => {"result":"a9aad9fa479b3a0c38cd3d828107164f86a9a273"}
@@ -54,3 +55,13 @@ node cli.js intake a test/request r2 => {"error":"request exists: r2"}
 node cli.js intake a test/request R3 => {"result":{"commit":"2ee11425d8a020f30a670e5a6cfb890a21abaee6","files":3}}
 node cli.js intake a test/request r4/x => {"error":"not a request name: r4/x"}
 bare cli.js --engine=p2pgit intake b test/request r2 => {"result":{"commit":"4c789971593c8dbc9245f871cda61a26f5c22a64","files":3}}
+# Export and import a bundle.
+node cli.js export a data/sets sets.bundle => {"result":{"commit":"3bfd39082d0ae082ad6cdd23c1c5907809ec53dc","bytes":664}}
+git bundle list-heads sets.bundle => exit 0
+sh ../mycelium-git/test/fixture.sh c => exit 0
+node cli.js --engine=p2pgit import-bundle c sets.bundle => {"result":{"commit":"3bfd39082d0ae082ad6cdd23c1c5907809ec53dc","objects":8}}
+node ../mycelium-git/cli.js --engine=p2pgit read c /data/sets/two.md => {"result":"two"}
+bare cli.js --engine=isogit import-bundle c sets.bundle data/sets data/bare => {"result":{"commit":"3bfd39082d0ae082ad6cdd23c1c5907809ec53dc","objects":8}}
+node cli.js import-bundle c sets.bundle data/sets other/x => {"error":"not a layer: other/x"}
+node cli.js import-bundle c sets.bundle data/nope => {"error":"not in the bundle: data/nope"}
+node cli.js export a data/nope nope.bundle => {"error":"no branch: data/nope"}

@@ -57,10 +57,20 @@ Executing requests is still the test-run machinery (`test-run/execute.js`).
 
 `test-run/request.sh` puts requests into instances with it.
 
-## To come
+## layer/export
 
-- layer/export: making a layer available to others, as a bundle
-  (waiting for bundle support)
+`exportLayer({ backend, layer, file })` makes a layer available to others
+as a bundle file: the layer with its history, self-contained, with no
+prerequisites. It resolves `{ commit, bytes }`.
+
+`importBundle({ backend, file, branch, as })` is the receiving
+repository's side: the bundle's objects are read in, and the layer is
+taken in under the layer rules (`importLayer`). `branch` is needed only
+when the bundle holds more than one. Nobody writes into another
+repository: one side writes a file, the other takes it in.
+
+Bundles are read and written by mycelium-git (`writeBundle`,
+`readBundle`), on every engine.
 
 ## Tests
 
