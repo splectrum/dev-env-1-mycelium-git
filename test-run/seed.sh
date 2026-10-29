@@ -39,9 +39,7 @@ for req in "$@"; do "$src/test-run/request.sh" "$dir" "$src/$req" >/dev/null; do
 
 git -C "$dir" branch execute/main main
 git -C "$dir" reset -q --hard
-machinery=${MACHINERY:-$(cat "$src/test-run/machinery")}
-from=$src/test-run/versions/$machinery
-[ "$machinery" = dev ] && from=$src/test-run
-cp "$from/hook.sh" "$dir/.git/hooks/execute"
+# The kick, as deployed: every instance carries its own.
+git -C "$dir" show capability/test:hook.sh > "$dir/.git/hooks/execute"
 chmod +x "$dir/.git/hooks/execute"
 echo "seeded $dir"

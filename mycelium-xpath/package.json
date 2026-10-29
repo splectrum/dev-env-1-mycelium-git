@@ -1,9 +1,11 @@
 {
   "name": "mycelium-xpath",
-  "version": "0.1.0",
+  "id": "c3ceb0df-f99e-4a55-9ed4-23601443fe72",
   "description": "Navigate a tree by path, generic",
   "type": "module",
   "exports": "./index.js",
-  "scripts": { "test": "node --test test/*.test.js" },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
   "license": "MIT"
 }
