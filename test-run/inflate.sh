@@ -17,7 +17,9 @@ git bundle verify -q "$bundle" 2>/dev/null
 git fetch -q --update-head-ok "$bundle" 'refs/heads/*:refs/heads/*'
 git checkout -q -f main
 
-cp "$src/test-run/hook.sh" .git/hooks/execute
+# The kick as deployed in the instance; runs kept before it was deployed
+# get the dev copy.
+git show capability/test:hook.sh > .git/hooks/execute 2>/dev/null || cp "$src/test-run/hook.sh" .git/hooks/execute
 chmod +x .git/hooks/execute
 
 echo "inflated $dir"

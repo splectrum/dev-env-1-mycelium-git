@@ -25,3 +25,4 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r16.bundle` | URI segments with file extensions; mycelium-git reads `request.md` by URI: 66 of 66 met |
 | `2026-10-29-r17.bundle` | Case-insensitive URIs, names kept as stored (`README.md`): 72 of 72 met |
 | `2026-10-29-r18.bundle` | Case-insensitive lookup only at the boundary (`sameName`), exact names inside: 72 of 72 met |
+| `2026-10-29-r19.bundle` | Modules and machinery by id, no versions; the deployment lists the ids and carries the kick: 72 of 72 met |
