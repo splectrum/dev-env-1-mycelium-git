@@ -20,15 +20,15 @@
 //   report.md     (Report) the report
 // pending/default is not written: it holds the requests only.
 //
-// Reads go through mycelium-git, deployed next to this file; the code that
-// runs is the deployed tree this file is part of. Writes still use git.
+// Reads and writes go through mycelium-git, deployed next to this file; the
+// code that runs is the deployed tree this file is part of.
 
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { tmpdir } from 'node:os'
 import { spawnSync } from 'node:child_process'
-import { nativeBackend, openRepo, pinned } from './mycelium-git/index.js'
+import { nativeBackend, openRepo, pinned, writer } from './mycelium-git/index.js'
 
 const code = dirname(fileURLToPath(import.meta.url))
 
@@ -38,19 +38,13 @@ if (!repo) {
   process.exit(2)
 }
 
-const git = (args, opts = {}) => {
-  const r = spawnSync('git', args, { cwd: opts.cwd || repo, encoding: 'utf8', maxBuffer: 1 << 30 })
-  if (r.status !== 0 && !opts.allowFail) {
-    throw new Error(`git ${args.join(' ')}: ${r.stderr.trim()}`)
-  }
-  return r.status === 0 ? r.stdout.trim() : null
-}
 const backend = nativeBackend(repo)
 const now = openRepo(backend)
+const w = writer(backend)
+const author = { name: 'test-run', email: 'test-run@localhost' }
 const found = async path => (await now.select(path)).length > 0
 const name = path => path.split('/').pop()
 
-git(['worktree', 'prune'])
 const pending = []
 for (const [path] of await now.select('/pending/default/pending/*')) {
   if (!await found(`${path}/request.md`) || await found(`/main/responses/${name(path)}`)) continue
@@ -75,16 +69,17 @@ async function execute ({ name, run: runLine, report: reportLine, line }) {
   const unit = {
     invocation: { request: name, line },
     state,
-    environment: { node: process.version, git: git(['--version']), platform: `${process.platform}-${process.arch}` },
+    environment: {
+      node: process.version,
+      git: spawnSync('git', ['--version'], { encoding: 'utf8' }).stdout.trim(),
+      platform: `${process.platform}-${process.arch}`
+    },
     nondeterministic: { run: runId, started, workDir: work }
   }
 
   try {
-    const execWt = join(work, 'execute')
-    git(['worktree', 'add', '-q', execWt, 'execute/main'])
-    git(['merge', '-q', '--no-edit', 'main'], { cwd: execWt })
-    const out = join(execWt, 'responses', name)
-    mkdirSync(out, { recursive: true })
+    const out = join(work, 'response')
+    mkdirSync(out)
 
     let outcome
     if (!line) {
@@ -103,17 +98,17 @@ async function execute ({ name, run: runLine, report: reportLine, line }) {
       `Executed \`${line || '(none)'}\` from \`${capability}\` at \`${state[capability].slice(0, 7)}\`, ` +
       `on \`pending/default\` at \`${state['pending/default'].slice(0, 7)}\` and \`main\` at \`${state.main.slice(0, 7)}\`. ` +
       'The unit record is `unit.json`.\n' + report)
-    git(['add', '.'], { cwd: execWt })
-    git(['commit', '-q', '-m', `Respond to ${name}\n\n${outcome}\n\n` +
-      `Request: ${state['pending/default'].slice(0, 7)}:pending/${name}/request.md`], { cwd: execWt })
-    git(['worktree', 'remove', execWt])
 
-    mergeIntoMain(`Merge execute/main: response to ${name}\n\n` +
-      `Request: ${state['pending/default'].slice(0, 7)}:pending/${name}/request.md`)
+    // Respond on execute/main, synced with main first, then a plain merge
+    // into main. The request is referenced by the pending/default commit.
+    const request = `Request: ${state['pending/default'].slice(0, 7)}:pending/${name}/request.md`
+    await w.merge('main', 'execute/main', 'Merge main into execute/main', { author, fastForward: true })
+    const c = await w.change('execute/main')
+    for (const file of readdirSync(out)) await c.put(`/responses/${name}/${file}`, readFileSync(join(out, file)))
+    await c.commit(`Respond to ${name}\n\n${outcome}\n\n${request}\n`, { author })
+    await w.merge('execute/main', 'main', `Merge execute/main: response to ${name}\n\n${request}\n`, { author })
   } finally {
-    // Remove the folder first, so prune drops worktrees a failure left behind.
     rmSync(work, { recursive: true, force: true })
-    git(['worktree', 'prune'])
   }
 }
 
@@ -148,20 +143,4 @@ function makeReport (out, scope) {
   }
   writeFileSync(join(out, 'report.md'), r.stdout)
   return 'Report made: `report.md`.'
-}
-
-// Plain merge into main, from main's own worktree if it is checked out.
-function mergeIntoMain (message) {
-  if (git(['symbolic-ref', '--short', '-q', 'HEAD'], { allowFail: true }) === 'main') {
-    git(['merge', '-q', '--no-ff', '-m', message, 'execute/main'])
-    return
-  }
-  const wt = mkdtempSync(join(tmpdir(), 'main-'))
-  rmSync(wt, { recursive: true })
-  git(['worktree', 'add', '-q', wt, 'main'])
-  try {
-    git(['merge', '-q', '--no-ff', '-m', message, 'execute/main'], { cwd: wt })
-  } finally {
-    git(['worktree', 'remove', '--force', wt])
-  }
 }

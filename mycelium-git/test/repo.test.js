@@ -18,17 +18,17 @@ before(() => {
 const paths = found => found.map(([p]) => p)
 
 test('above the branches: name segments', async () => {
-  assert.deepEqual(paths(await repo.select('/*')), ['/main', '/overlay', '/pending'])
+  assert.deepEqual(paths(await repo.select('/*')), ['/execute', '/main', '/overlay', '/pending'])
   assert.deepEqual(paths(await repo.select('/pending/*')), ['/pending/default'])
   assert.deepEqual(paths(await repo.select('/*/*')),
-    ['/main/README.md', '/main/docs', '/main/readme', '/overlay/config', '/pending/default'])
+    ['/execute/main', '/main/README.md', '/main/docs', '/main/readme', '/overlay/config', '/pending/default'])
 })
 
 test('into a branch', async () => {
   assert.deepEqual(paths(await repo.select('/main/*')), ['/main/README.md', '/main/docs', '/main/readme'])
   assert.deepEqual(paths(await repo.select('/pending/default/pending/*')), ['/pending/default/pending/r1'])
   assert.deepEqual(paths(await repo.select('/*/docs/a')), ['/main/docs/a'])
-  assert.deepEqual(paths(await repo.select('/*/*/docs/a')), ['/overlay/config/docs/a'])
+  assert.deepEqual(paths(await repo.select('/*/*/docs/a')), ['/execute/main/docs/a', '/overlay/config/docs/a'])
   assert.deepEqual(await repo.select('/main/nope'), [])
 })
 

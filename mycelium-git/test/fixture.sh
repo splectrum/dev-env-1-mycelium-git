@@ -12,7 +12,9 @@ cd "$dir"
 blob() { printf '%s' "$1" | git hash-object -w --stdin; }
 docs=$(printf '100644 blob %s\ta\n100644 blob %s\tb\n' "$(blob A)" "$(blob B)" | git mktree)
 main=$(printf '100644 blob %s\treadme\n100644 blob %s\tREADME.md\n040000 tree %s\tdocs\n' "$(blob hello)" "$(blob convention)" "$docs" | git mktree)
-git update-ref refs/heads/main "$(git commit-tree "$main" -m main)"
+first=$(git commit-tree "$main" -m main)
+git update-ref refs/heads/main "$first"
+git update-ref refs/heads/execute/main "$first"
 r1=$(printf '100644 blob %s\trequest.md\n' "$(blob '# Request: r1')" | git mktree)
 pend=$(printf '040000 tree %s\tr1\n' "$r1" | git mktree)
 top=$(printf '040000 tree %s\tpending\n' "$pend" | git mktree)
