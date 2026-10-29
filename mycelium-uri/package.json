@@ -1,6 +1,6 @@
 {
   "name": "mycelium-uri",
-  "id": "d74b8951-a5f0-4af7-9088-038c7c3f3cbe",
+  "id": "243c799f-0d77-43e2-8c18-35d461da9551",
   "description": "Our URIs: parse, validate, split at known prefixes",
   "type": "module",
   "exports": "./index.js",

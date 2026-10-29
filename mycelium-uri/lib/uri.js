@@ -2,8 +2,8 @@
 // A segment is a name of [a-z0-9-], with optional '.'-separated extensions
 // of the same characters: at this level a leaf is an object, and its name
 // includes its extension. Every URI starts with a branch name, from the root.
-// URIs are case-insensitive: the canonical form is lowercase, and names keep
-// their own case where they are stored.
+// URIs are case-insensitive: the canonical form is lowercase. Inside our
+// repositories every name is lowercase; external content may keep its case.
 //
 // Validation is at the boundary: validate() (or parse) where a URI comes
 // in. The other functions work on valid values and don't check again.
