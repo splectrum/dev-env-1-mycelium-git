@@ -1,9 +1,11 @@
 {
   "name": "mycelium-git",
-  "version": "0.1.0",
+  "id": "566f4cd9-4f5c-482e-8881-ee63052c0f33",
   "description": "The repository rules over a backend contract",
   "type": "module",
   "exports": "./index.js",
-  "scripts": { "test": "node --test test/*.test.js" },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
   "license": "MIT"
 }

@@ -40,18 +40,25 @@ git -C /tmp/runs/r1 show main:responses/report-runs/report.md
 - `report.js` (`Report: runs`) compares every recorded invocation with its
   expectation, read from the tests file at the recorded state.
 
-## Pinned machinery
+## Ids, not versions
 
-The run machinery (`runner.js`, `execute.js`, `report.js` and the kick) is
-deployed from a validated version. Each validated version is kept as data
-in `test-run/versions/<id>/`, named by a GUID, independent of this
-repository's git history. `test-run/machinery` holds the id in use. Only
-the modules come from the current commit.
+Every module (`mycelium-*`) and the machinery (`test-run/`) carry an `id`,
+a GUID, in their `package.json`. There is no version number: a validated
+change gets a new id, and the commit that records it is that instance's
+place in the module's evolution. `test-run/find-id.sh <folder> <id>` finds
+it. The repository's history is the authoritative record; an id only
+names an instance, and choosing a suitable later one is done by reading
+that history.
 
-To change the machinery, develop it in `test-run/` and run it with
-`MACHINERY=dev`. Once a run validates it, copy it to a new
-`versions/<new id>/` and put the new id in `test-run/machinery`. Kept runs
-carry their own machinery, so each one stays investigable as it was.
+A deployment lists the ids it contains, in its commit message, and the
+deployed tree carries every `package.json` (the machinery's as
+`machinery.json`). It also carries the kick, so every instance is
+self-contained.
+
+The machinery is pinned by the id in `test-run/machinery`. Only the modules
+come from the current commit. To change the machinery, develop it in
+`test-run/` and run with `MACHINERY=dev`. Once a run validates it, give it
+a new id and put that id in `test-run/machinery`.
 
 ## Requests
 
