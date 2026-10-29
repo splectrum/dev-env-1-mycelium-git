@@ -33,11 +33,22 @@ every engine. Checked on a real deployment of 2,261 files: native git
 
 `test-run/deploy.sh` deploys into test-run instances with it.
 
+## layer/extract
+
+`extract({ backend, layer, path, folder, source })` extracts a layer, or a
+folder in it (`path`, default `/`), to a folder on disk as a folder
+package. The folder must not exist yet. Files get their mode back as git
+records it: executable, symbolic link, or plain.
+
+The provenance (`source` if given, `layer`, `path`, `commit`, `tree`,
+`files`) is the result, and is written beside the folder as
+`<folder>.provenance.json`. Beside, not inside, so the folder is exactly
+the tree: deployed again, it gives the same tree.
+
 ## To come
 
 - layer/export: making a layer available to others, as a bundle
   (waiting for bundle support)
-- layer/extract
 
 ## Tests
 

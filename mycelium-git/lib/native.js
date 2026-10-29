@@ -3,6 +3,7 @@
 
 import { spawn } from 'node:child_process'
 import process from 'node:process'
+import fs from 'node:fs'
 
 const ZERO = '0000000000000000000000000000000000000000'
 
@@ -27,6 +28,12 @@ export function nativeBackend (dir) {
   const git = async (args, opts) => (await run(args, opts)).stdout
 
   return {
+    // A new repository: bare, with main as its default branch.
+    async init () {
+      fs.mkdirSync(dir, { recursive: true })
+      await run(['init', '-q', '--bare', '-b', 'main', '.'])
+    },
+
     // --- Reading ---
 
     // Branches, as [name, commit oid] pairs: 'pending/default', not 'refs/heads/...'.

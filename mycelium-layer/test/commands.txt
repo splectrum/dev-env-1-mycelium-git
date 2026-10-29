@@ -2,8 +2,8 @@
 # One invocation per line: <command> <arg>... => <expectation>
 # Two fixture repositories, a and b (mycelium-git's fixture); a layer made in a
 # is imported into b, across engines and on Bare. Then test/folder (a file, a
-# subfolder, an executable, a symbolic link) is deployed into a layer.
-# mycelium-git's CLI prepares and reads.
+# subfolder, an executable, a symbolic link) is deployed into a layer, extracted
+# back to disk and deployed again. mycelium-git's CLI prepares and reads.
 sh ../mycelium-git/test/fixture.sh a => exit 0
 sh ../mycelium-git/test/fixture.sh b => exit 0
 node ../mycelium-git/cli.js create-layer a data/sets => {"result":"a9aad9fa479b3a0c38cd3d828107164f86a9a273"}
@@ -36,3 +36,12 @@ node cli.js --engine=p2pgit deploy b capability/test test/folder => {"result":{"
 bare cli.js --engine=isogit deploy b capability/test test/folder => {"result":{"commit":"a224a71bbbdb8145dbf405e8409ef25af5fe5908","tree":"ee0b9376c954e32a938cca874d27b14d91e8a829","files":4}}
 node cli.js deploy a other/x test/folder => {"error":"not a layer: other/x"}
 node cli.js deploy a capability/test test/nope => {"error":"ENOENT: no such file or directory, scandir 'test/nope'"}
+# Extract.
+node cli.js extract a capability/test / x => {"result":{"layer":"capability/test","path":"/","commit":"e22b8fb09f010c396d6b713e66901e77dd8455e5","tree":"ee0b9376c954e32a938cca874d27b14d91e8a829","files":4}}
+node cli.js deploy a capability/again x => {"result":{"commit":"05020685ba57fab71b1fb6c20b2cbd54c9a83a02","tree":"ee0b9376c954e32a938cca874d27b14d91e8a829","files":4}}
+node cli.js extract a capability/test /sub x-sub => {"result":{"layer":"capability/test","path":"/sub","commit":"e22b8fb09f010c396d6b713e66901e77dd8455e5","tree":"4f15d37c30f58685fc01e8d241fc4f3cc35669e1","files":1}}
+node cli.js extract a capability/test / x => {"error":"exists: x"}
+node cli.js extract a capability/test /a.md z => {"error":"not a folder: /a.md"}
+node cli.js extract a nope / z => {"error":"no branch: nope"}
+bare cli.js --engine=p2pgit extract b capability/test / y => {"result":{"layer":"capability/test","path":"/","commit":"a224a71bbbdb8145dbf405e8409ef25af5fe5908","tree":"ee0b9376c954e32a938cca874d27b14d91e8a829","files":4}}
+bare cli.js --engine=p2pgit deploy b capability/again y => {"result":{"commit":"d4fba93689eba1487c08387626a51d7ca0b33801","tree":"ee0b9376c954e32a938cca874d27b14d91e8a829","files":4}}

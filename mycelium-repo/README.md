@@ -44,9 +44,22 @@ reported, never forced.
 For a diverged or remote-ahead branch the objects are still copied, but
 nothing refers to them on the remote; garbage collection removes them.
 
-## To come
+## repo/seed
 
-- repo/seed
+`seed({ backend, template, source, author, time })` creates a new
+repository from a seed template, on any engine, and resolves
+`{ branch: commit }`. It initialises the repository (`init` in the backend
+contract); one that already has branches is refused.
+
+The template is a folder laid out as the repository seen as one tree:
+`main/` is the branch `main`, and each `<segment>/<name>/` is the branch
+`<segment>/<name>` (`pending/default/`, `overlay/config/`, ...). Each
+becomes a layer with one seed commit, `Seed <branch> from <source>`
+(`layer/deploy`), and `execute/main` is created from `main`. A template
+without `main` is refused. Every engine seeds the same repository, down
+to the commit oids.
+
+`test-run/seed.sh` seeds test-run instances with it.
 
 ## Tests
 
