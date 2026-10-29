@@ -23,7 +23,7 @@ rm -f "$idx"
 # Put it at <path> in the branch's tree.
 if [ "$path" != "." ]; then
   [ -n "$parent" ] && g read-tree "$parent"
-  g rm -rq --cached --ignore-unmatch "$path"
+  (cd "$dir" && g --work-tree=. rm -rq --cached --ignore-unmatch "$path")
   g read-tree --prefix="$path/" "$tree"
   tree=$(g write-tree)
 fi
