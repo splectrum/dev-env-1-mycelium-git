@@ -39,6 +39,9 @@ for req in "$@"; do "$src/test-run/request.sh" "$dir" "$src/$req" >/dev/null; do
 
 git -C "$dir" branch execute/main main
 git -C "$dir" reset -q --hard
-git -C "$src" show "${MACHINERY:-$(cat "$src/test-run/machinery")}:test-run/hook.sh" > "$dir/.git/hooks/execute"
+machinery=${MACHINERY:-$(cat "$src/test-run/machinery")}
+from=$src/test-run/versions/$machinery
+[ "$machinery" = dev ] && from=$src/test-run
+cp "$from/hook.sh" "$dir/.git/hooks/execute"
 chmod +x "$dir/.git/hooks/execute"
 echo "seeded $dir"
