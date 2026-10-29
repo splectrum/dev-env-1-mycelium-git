@@ -6,7 +6,11 @@ dependencies.
 A URI is absolute and `/`-separated, with no scheme, query or fragment. A
 segment is a name of lowercase `a-z`, `0-9` and `-`, with optional
 `.`-separated extensions of the same characters (`request.md`). At this
-level a leaf is an object, and its name includes its extension. Every URI starts with a
+level a leaf is an object, and its name includes its extension.
+
+URIs are case-insensitive. The canonical form is lowercase; names keep
+their own case where they are stored (`README.md`), and a URI in any case
+finds them. So no two names in one folder may differ only by case. Every URI starts with a
 branch name, from the root: `/main/x/y`, `/overlay/config/x/y`.
 
 ## API
@@ -15,9 +19,10 @@ Validation is at the boundary: `validate` where a URI comes in. The other
 functions work on valid values and don't check again.
 
 - `validate(uri)` → the canonical URI. Fixes accepted deviations and
-  throws when the rules are broken. The accepted deviations are empty
-  parts: `//` and a trailing `/`; `''` is the root. So
-  `validate('/main//x/')` → `'/main/x'`. With `{ star: true }` a step
+  throws when the rules are broken. The accepted deviations are uppercase,
+  which folds to lowercase, and empty parts: `//` and a trailing `/`;
+  `''` is the root. So `validate('/Main//README.md/')` →
+  `'/main/readme.md'`. With `{ star: true }` a step
   may also be `*`, for paths that select
 - `isUri(uri)` → boolean: is it a canonical URI
 - `isSegment(s)` → boolean

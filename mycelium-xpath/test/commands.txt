@@ -13,3 +13,5 @@ node cli.js select test/tree.json /main/readme/* => {"result":[]}
 node cli.js select test/tree.json /main/src/*/x => {"result":[["/main/src/lib/x","X"]]}
 node cli.js frobnicate test/tree.json /main => {"error":"unknown op: frobnicate"}
 node cli.js select test/missing.json /main => {"error":"ENOENT: no such file or directory, open 'test/missing.json'"}
+node cli.js select test/tree.json /main/README.md => {"result":[["/main/README.md","convention"]]}
+node cli.js select test/tree.json /main/readme.md => {"result":[["/main/README.md","convention"]]}

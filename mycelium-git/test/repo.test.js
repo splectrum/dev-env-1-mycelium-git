@@ -19,11 +19,11 @@ test('above the branches: name segments', async () => {
   assert.deepEqual(paths(await repo.select('/*')), ['/main', '/overlay', '/pending'])
   assert.deepEqual(paths(await repo.select('/pending/*')), ['/pending/default'])
   assert.deepEqual(paths(await repo.select('/*/*')),
-    ['/main/docs', '/main/readme', '/overlay/config', '/pending/default'])
+    ['/main/README.md', '/main/docs', '/main/readme', '/overlay/config', '/pending/default'])
 })
 
 test('into a branch', async () => {
-  assert.deepEqual(paths(await repo.select('/main/*')), ['/main/docs', '/main/readme'])
+  assert.deepEqual(paths(await repo.select('/main/*')), ['/main/README.md', '/main/docs', '/main/readme'])
   assert.deepEqual(paths(await repo.select('/pending/default/pending/*')), ['/pending/default/pending/r1'])
   assert.deepEqual(paths(await repo.select('/*/docs/a')), ['/main/docs/a'])
   assert.deepEqual(paths(await repo.select('/*/*/docs/a')), ['/overlay/config/docs/a'])
@@ -33,6 +33,7 @@ test('into a branch', async () => {
 test('read', async () => {
   assert.equal((await repo.read('/main/readme')).toString(), 'hello')
   assert.equal((await repo.read('/overlay/config/docs/a')).toString(), 'conf')
+  assert.equal((await repo.read('/main/readme.md')).toString(), 'convention')
   await assert.rejects(repo.read('/main/docs'), /not a file/)
   await assert.rejects(repo.read('/main/nope'), /not a file/)
 })
