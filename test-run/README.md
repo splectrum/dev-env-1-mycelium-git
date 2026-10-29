@@ -35,9 +35,9 @@ git -C /tmp/runs/r1 show main:responses/report-runs/report.md
   - `report.md` (Report).
 
   `pending/default` is never written; it holds the requests.
-- `deploy.sh` deploys with `layer/deploy` (mycelium-layer). `request.sh`
-  still commits through `commit-dir.sh`, which commits a folder into a
-  branch without a worktree, by compare-and-swap.
+- `deploy.sh` deploys with `layer/deploy`, and `request.sh` puts a request
+  in with request intake (both mycelium-layer). The scripts call our own
+  capabilities; none commits with git directly.
 - `runner.js` executes a tests file line by line, each command without a
   shell, and records it.
 - `report.js` (`Report: runs`) compares every recorded invocation with its

@@ -3,7 +3,8 @@
 # Two fixture repositories, a and b (mycelium-git's fixture); a layer made in a
 # is imported into b, across engines and on Bare. Then test/folder (a file, a
 # subfolder, an executable, a symbolic link) is deployed into a layer, extracted
-# back to disk and deployed again. mycelium-git's CLI prepares and reads.
+# back to disk and deployed again. A request (test/request) is taken into
+# pending/default. mycelium-git's CLI prepares and reads.
 sh ../mycelium-git/test/fixture.sh a => exit 0
 sh ../mycelium-git/test/fixture.sh b => exit 0
 node ../mycelium-git/cli.js create-layer a data/sets => {"result":"a9aad9fa479b3a0c38cd3d828107164f86a9a273"}
@@ -45,3 +46,11 @@ node cli.js extract a capability/test /a.md z => {"error":"not a folder: /a.md"}
 node cli.js extract a nope / z => {"error":"no branch: nope"}
 bare cli.js --engine=p2pgit extract b capability/test / y => {"result":{"layer":"capability/test","path":"/","commit":"a224a71bbbdb8145dbf405e8409ef25af5fe5908","tree":"ee0b9376c954e32a938cca874d27b14d91e8a829","files":4}}
 bare cli.js --engine=p2pgit deploy b capability/again y => {"result":{"commit":"d4fba93689eba1487c08387626a51d7ca0b33801","tree":"ee0b9376c954e32a938cca874d27b14d91e8a829","files":4}}
+# Request intake.
+node cli.js intake a test/request r2 => {"result":{"commit":"4c789971593c8dbc9245f871cda61a26f5c22a64","files":3}}
+node ../mycelium-git/cli.js select a /pending/default/pending/* => {"result":[["/pending/default/pending/r1",{"type":"tree","oid":"1b609917d35fac7434d8747812c214cf043c2a80"}],["/pending/default/pending/r2",{"type":"tree","oid":"efd9cdd041d9999474e484ea219c267066d42f23"}]]}
+node ../mycelium-git/cli.js read a /pending/default/pending/r2/data/x.md => {"result":"x\n"}
+node cli.js intake a test/request r2 => {"error":"request exists: r2"}
+node cli.js intake a test/request R3 => {"result":{"commit":"2ee11425d8a020f30a670e5a6cfb890a21abaee6","files":3}}
+node cli.js intake a test/request r4/x => {"error":"not a request name: r4/x"}
+bare cli.js --engine=p2pgit intake b test/request r2 => {"result":{"commit":"4c789971593c8dbc9245f871cda61a26f5c22a64","files":3}}

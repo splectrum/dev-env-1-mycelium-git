@@ -45,6 +45,18 @@ The provenance (`source` if given, `layer`, `path`, `commit`, `tree`,
 `<folder>.provenance.json`. Beside, not inside, so the folder is exactly
 the tree: deployed again, it gives the same tree.
 
+## layer/request: intake
+
+`intake({ backend, folder, name, author, time })` takes a request into
+`pending/default`, as `pending/<name>/`, in one commit (`Add request:
+<name>`). The request is a folder on disk, and its files go in as they
+are. A request already there is refused, because requests are only added.
+It resolves `{ commit, files }`.
+
+Executing requests is still the test-run machinery (`test-run/execute.js`).
+
+`test-run/request.sh` puts requests into instances with it.
+
 ## To come
 
 - layer/export: making a layer available to others, as a bundle
