@@ -42,6 +42,15 @@ stored names, valid when they come in.
   layers are never merged, and conflicts throw. `fastForward` lets `into`
   simply move to `from` when it can, for syncing an execution branch,
   never for `main`.
+- `createLayer(name, message, { author, time })`: a new layer, an orphan
+  branch whose first commit has an empty tree. Its first segment must be a
+  layer's: `main` (on its own), `pending`, `overlay`, `data` or
+  `capability`. `execute` and `publish` branches are derived, not layers.
+- `createExecution(target)`: `execute/<target>`, from the target's head.
+- `deleteBranch(name, into)`: only once merged, with its head in `into`'s
+  history. `main` and `pending/default` are permanent.
+- A new name is never both a branch and a prefix: `data/sets` and
+  `data/sets/more` can't both exist, nor `data` beside `data/sets`.
 - Refs move only by compare-and-swap. History only grows, and a
   concurrent change fails instead of being overwritten.
 
@@ -53,7 +62,7 @@ stored names, valid when they come in.
 - Writing: `writeBlob(bytes)`, `writeTree(entries)`,
   `writeCommit({ tree, parents, message, author, time })` → oid;
   `updateBranch(name, oid, expected)`, compare-and-swap (`null`: must not
-  exist)
+  exist); `deleteBranch(name, expected)`, the same
 - History and merge: `mergeBase(a, b)` → oid or `null`;
   `isAncestor(a, b)`; `mergeTrees(ours, theirs)` → `{ tree, conflicts }`
 
@@ -92,4 +101,5 @@ the same writes give the same oids on every engine (`test/engines.test.js`).
   and each line's state carries on to the next. `test/commands-isogit.txt`
   is the same on isomorphic-git (`--engine=isogit`), and
   `test/commands-p2pgit.txt` on p2p-git, and `test/commands-bare-*.txt` the
-  same on Bare, all with the same expectations
+  same on Bare, all with the same expectations. `node test/variants.js`
+  generates those from `commands.txt`

@@ -6,6 +6,9 @@
 //   node cli.js put <repo> <branch> <path> <text>   one put, committed
 //   node cli.js remove <repo> <branch> <path>       one remove, committed
 //   node cli.js merge <repo> <from> <into>          a plain merge
+//   node cli.js create-layer <repo> <name>          an orphan layer
+//   node cli.js create-execution <repo> <target>    execute/<target>
+//   node cli.js delete <repo> <name> <into>         delete, once merged
 // Prints the outcome as one JSON line: {"result": ...}, or {"error": "..."}
 // with exit 1. Commits are by 'cli' at a fixed time, so oids are stable.
 //
@@ -41,7 +44,10 @@ const ops = {
     return c.commit(`Remove ${path}`, commit)
   },
   merge: async (repo, w, from, into) =>
-    w.merge(branch(from), branch(into), `Merge ${from} into ${into}`, commit)
+    w.merge(branch(from), branch(into), `Merge ${from} into ${into}`, commit),
+  'create-layer': async (repo, w, name) => w.createLayer(branch(name), `Create ${name}`, commit),
+  'create-execution': async (repo, w, target) => w.createExecution(branch(target)),
+  delete: async (repo, w, name, into) => { await w.deleteBranch(branch(name), branch(into)); return null }
 }
 
 try {
