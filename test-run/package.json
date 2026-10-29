@@ -1,6 +1,6 @@
 {
   "name": "test-run",
-  "id": "015f3ca2-42cb-4250-8eda-98a7a0be68f8",
+  "id": "f028269b-3f7d-4332-b726-6b7b72a3b930",
   "description": "The run machinery: runner.js, execute.js, report.js and the kick (hook.sh)",
   "type": "module",
   "license": "MIT"
