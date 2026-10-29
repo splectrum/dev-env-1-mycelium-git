@@ -2,4 +2,4 @@
 // First slice: reading a repository by path, from the branch root.
 
 export { nativeBackend } from './lib/native.js'
-export { openRepo } from './lib/repo.js'
+export { openRepo, pinned } from './lib/repo.js'

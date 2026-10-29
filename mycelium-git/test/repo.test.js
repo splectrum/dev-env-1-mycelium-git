@@ -4,14 +4,15 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { nativeBackend, openRepo } from '../index.js'
+import { nativeBackend, openRepo, pinned } from '../index.js'
 import { sameName } from '../../mycelium-uri/index.js'
 
-let repo
+let repo, backend
 before(() => {
   const dir = join(mkdtempSync(join(tmpdir(), 'mycelium-git-')), 'repo')
   execFileSync('sh', [new URL('./fixture.sh', import.meta.url).pathname, dir])
-  repo = openRepo(nativeBackend(dir))
+  backend = nativeBackend(dir)
+  repo = openRepo(backend)
 })
 
 const paths = found => found.map(([p]) => p)
@@ -39,4 +40,11 @@ test('read', async () => {
   assert.equal((await repo.read('/main/readme.md', sameName)).toString(), 'convention')
   await assert.rejects(repo.read('/main/docs'), /not a file/)
   await assert.rejects(repo.read('/main/nope'), /not a file/)
+})
+
+test('pinned: a repository at a recorded state', async () => {
+  const branches = Object.fromEntries(await backend.listBranches())
+  const old = openRepo(pinned(backend, { main: branches.main }))
+  assert.deepEqual(paths(await old.select('/*')), ['/main'])
+  assert.equal((await old.read('/main/readme')).toString(), 'hello')
 })
