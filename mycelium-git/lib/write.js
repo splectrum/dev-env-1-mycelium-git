@@ -13,6 +13,8 @@ const TREE = '040000'
 // First segments of layers, which start as orphans. execute and publish
 // branches are derived from another branch, not created as layers.
 const LAYERS = ['main', 'pending', 'overlay', 'data', 'capability']
+// Every reserved first segment: a branch name starts with one.
+const RESERVED = [...LAYERS, 'execute', 'publish']
 // Permanent: never deleted.
 const PERMANENT = ['main', 'pending/default']
 
@@ -52,11 +54,11 @@ export function writer (backend) {
       return oid
     },
 
-    // A layer taken in from another repository, with its history: the branch
-    // at a commit whose objects are already here (see transfer). New, it
-    // follows the layer rules; existing, it only moves forward: the new
-    // commit must hold the current one in its history.
-    async importLayer (name, commit) {
+    // A branch set to a commit whose objects are already here (see
+    // transfer), forward only: an existing branch moves only to a commit
+    // that holds its current one in its history. A new one must start with
+    // a reserved segment and be a leaf.
+    async advance (name, commit) {
       if (!await backend.hasObject(commit)) throw new Error(`no commit: ${commit}`)
       const current = await head(name)
       if (current) {
@@ -65,10 +67,19 @@ export function writer (backend) {
         await backend.updateBranch(name, commit, current)
         return commit
       }
-      layerName(name)
+      if (!RESERVED.includes(name.split('/')[0]) || name === 'execute' || name === 'publish') {
+        throw new Error(`not a branch name: ${name}`)
+      }
       await free(name)
       await backend.updateBranch(name, commit, null)
       return commit
+    },
+
+    // A layer taken in from another repository, with its history: advance,
+    // under the layer rules for a new one.
+    async importLayer (name, commit) {
+      if (!await head(name)) layerName(name)
+      return this.advance(name, commit)
     },
 
     // The execution branch of a target: execute/<target>, from its head.
