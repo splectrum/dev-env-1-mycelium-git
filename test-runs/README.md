@@ -24,3 +24,4 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r15.bundle` | Machinery deployed from validated version `ee55ef63-87ce-4e11-a746-a627df2649cb` (a GUID, not a commit): 62 of 62 met |
 | `2026-10-29-r16.bundle` | URI segments with file extensions; mycelium-git reads `request.md` by URI: 66 of 66 met |
 | `2026-10-29-r17.bundle` | Case-insensitive URIs, names kept as stored (`README.md`): 72 of 72 met |
+| `2026-10-29-r18.bundle` | Case-insensitive lookup only at the boundary (`sameName`), exact names inside: 72 of 72 met |

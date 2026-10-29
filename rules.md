@@ -118,7 +118,8 @@ Scope: branch names and repository folders, wherever XPath is used.
   canonical, lowercase form and selected; names keep their own case where
   they are stored (`README.md`, by convention), and the requester gets the
   object as stored. So no two names in one folder may differ only by
-  case.
+  case. That lookup is the boundary's process; inside, paths are stored
+  names and match exactly.
 - A name is never both a branch and a prefix.
 
 ## Open
