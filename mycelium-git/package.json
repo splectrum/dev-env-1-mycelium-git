@@ -17,5 +17,9 @@
     "pako": "1.0.11",
     "path": "npm:bare-node-path@1.0.1",
     "process": "npm:bare-node-process@1.0.1"
+  },
+  "devDependencies": {
+    "corestore": "7.16.1",
+    "hyperdrive": "13.3.4"
   }
 }

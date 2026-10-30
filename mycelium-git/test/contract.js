@@ -1,5 +1,5 @@
 // The contract suite: the same tests, run against every backend.
-//   contract(name, makeBackend), makeBackend(gitdir) → backend
+//   contract(name, makeBackend), makeBackend(gitdir) → backend (or a promise)
 // Each run builds the fixture repository (test/fixture.sh).
 
 import { test, before } from 'node:test'
@@ -24,8 +24,8 @@ const time = '2026-01-02T00:00:00Z'
 export function contract (name, makeBackend) {
   // Reading: one fixture, never written.
   let repo, backend
-  before(() => {
-    backend = makeBackend(fixture())
+  before(async () => {
+    backend = await makeBackend(fixture())
     repo = openRepo(backend)
   })
   test(`${name}: above the branches: name segments`, async () => {
@@ -62,8 +62,8 @@ export function contract (name, makeBackend) {
 
   // Writing: a fixture of its own, written in sequence.
   let wb, wrepo, w
-  before(() => {
-    wb = makeBackend(fixture())
+  before(async () => {
+    wb = await makeBackend(fixture())
     wrepo = openRepo(wb)
     w = writer(wb)
   })
@@ -184,7 +184,7 @@ export function contract (name, makeBackend) {
 
   test(`${name}: init: a new, empty, bare repository`, async () => {
     const dir = join(mkdtempSync(join(tmpdir(), 'init-')), 'new')
-    const b = makeBackend(dir)
+    const b = await makeBackend(dir)
     await b.init()
     assert.deepEqual(await b.listBranches(), [])
     const tree = await b.writeTree([])

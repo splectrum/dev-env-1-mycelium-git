@@ -35,6 +35,8 @@ git -C /tmp/runs/r1 show main:responses/report-runs/report.md
   - `report.md` (Report).
 
   `pending/default` is never written; it holds the requests.
+- Deployments leave out development dependencies (`npm prune --omit=dev`
+  on the staged copy).
 - `deploy.sh` deploys with `layer/deploy`, and `request.sh` puts a request
   in with request intake (both mycelium-layer). The scripts call our own
   capabilities; none commits with git directly.
