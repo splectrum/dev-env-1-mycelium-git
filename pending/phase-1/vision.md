@@ -42,6 +42,42 @@ the way can take them into account.
   of git's model live inside P2P, and which only at the edge. To be
   evaluated once Hypercore is integrated and understood.
 
+## Packages and deployments in P2P
+
+An important part of the infrastructure, needed early: to start, run and
+use a P2P cluster at all.
+
+- No npm inside P2P. npm is the outside world's distribution (a central
+  registry clients fetch from). A package is brought in from the outside
+  once, at the boundary, and from then on lives in P2P under its own
+  identity.
+- Packages are repositories in their own right: our module repositories,
+  and third-party packages each brought in once. An instance is a commit
+  (named by its id); the repository's history places it.
+- A deployment links to packages rather than containing them: a tree of
+  links, one per package (git's gitlinks, mode 160000, or a manifest). On
+  Hypercore a link is the package repository's key and the commit. Nodes
+  load lazily, only what they read, verified by oid. Self-contained means
+  complete by reference.
+- One by one is the base unit, since packages change independently and are
+  shared across deployments. Groups (a functional package, a dependency
+  set) are repositories whose trees link packages, and can nest: a
+  lockfile made of repositories. To measure: one core per third-party
+  package (hundreds) against a vendor repository per group.
+- A P2P cluster's prerequisites are availability, not installation: the
+  runtime on each node (Bare), the package repositories reachable in the
+  cluster, and at least one always-on peer seeding them.
+- Creating a cluster: a self-contained deployment repository that stays
+  alive for the duration of the deployment. It holds what the cluster is
+  (its deployment, its links, its nodes) and is the cluster's reference
+  while it runs.
+- Monitoring and management have to be considered from the start: the
+  cluster's state, its health, its nodes and their deployments, kept and
+  reached through repositories and requests like everything else.
+- To try in the Hypercore phase: gitlinks or a manifest; per-package cores
+  against groups; lazy loading from linked repositories; a deployment
+  repository bringing up nodes in containers.
+
 ## Storage and deltas
 
 - Loose objects stay the model and the working store: each object
