@@ -78,6 +78,46 @@ use a P2P cluster at all.
   against groups; lazy loading from linked repositories; a deployment
   repository bringing up nodes in containers.
 
+## The package repository and the seed node (scope for the roadmap)
+
+A prerequisite for the P2P cluster work: an initial version comes first.
+
+The package repository:
+
+- One repository holds the packages' actual content, the data on disk.
+  Every other repository holds only links. Each package instance is stored
+  once, however many deployments use it.
+- Layout (a first proposal): one branch per package (e.g. `data/<package>`),
+  each instance a commit holding the package's tree, named by its id. Our
+  modules arrive through repo/publish; third-party packages once, at the
+  boundary, from installed `node_modules` folders.
+- A deployment's tree holds gitlinks (mode 160000), one per package, each
+  pointing to the package's commit in the package repository.
+- Materialising a deployment on a node: each link resolved against the
+  package repository and extracted into the folder layout Node and Bare
+  expect (layer/extract, per link). The non-lazy, filesystem version of
+  what Hypercore will do lazily.
+- It can be built and tested in git first, in the test-run model (deploy
+  by links, materialise, run the same tests, compare the records), before
+  replication changes how it's reached. It also ends the bundle-size
+  problem: instances hold links, the package repository holds the bytes.
+
+The seed node:
+
+- No heavy prebuilt images. A container, or any other platform that is a
+  node, starts from a plain base with the runtime (Bare) only; everything
+  else arrives as repositories.
+- A self-contained bootstrap repository runs on it, a process that sets up
+  the cluster's seed node: obtain the package repository, materialise what
+  the node needs, start the node.
+- The seed node is the first always-on peer. It seeds the package
+  repository and is where other nodes join (discovery, bootstrap). A later
+  node needs only the bootstrap repository and the seed node's key; the
+  rest comes from the cluster, lazily.
+- The one bootstrap problem: the very first repository comes from the
+  outside world, as a bundle copied or mounted in, or a clone at the
+  boundary. Every node after the seed node gets it from the cluster.
+
 ## Storage and deltas
 
 - Loose objects stay the model and the working store: each object
