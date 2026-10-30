@@ -21,10 +21,13 @@
 - `overlay/<name>` branches are overlays on `main`: orphan branches
   mirroring `main`'s paths.
 - Further data layers, if needed, are `data/<name>` branches.
-- Request data goes to `pending/default`, the response to `execute/*`.
-  Request data includes the execution data of the request: metrics, audit,
-  verdicts. Data from a unit in operation belongs to its instance; nothing
-  private goes into `pending/default`.
+- Outcomes are data, in the visible state on `main`: results, notes,
+  designs, decisions, kept runs. `pending/default` holds the requests and
+  the metadata around producing the visible state, nothing more.
+- The response to a request, with its execution record (the unit, its
+  results), goes to `execute/*` and from there into `main`. Data from a
+  unit in operation belongs to its instance; nothing private goes into
+  `pending/default`.
 
 ## Layers
 
