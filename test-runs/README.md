@@ -56,3 +56,4 @@ it (`git clone <bundle> <dir>`) to browse it.
 | `2026-10-29-r43.bundle` | All requests, self-tests included, with the pinned machinery: the reference for r44 |
 | `2026-10-29-r44.bundle` | The same with the request flow as layer/request's executeRequests: identical report, records, files and history; validated as `46ba2e65-5221-43f2-96cd-6dec6c82d35c` |
 | `2026-10-29-r45.bundle` | Machinery pinned at `46ba2e65-5221-43f2-96cd-6dec6c82d35c`: all met |
+| `2026-10-30-r46.bundle` | Deployment without development dependencies (no Hyperdrive, Corestore or rocksdb-native in the instance), after p2p-git on Hyperdrive: all met |
