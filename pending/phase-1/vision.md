@@ -33,6 +33,15 @@ the way can take them into account.
   them itself. The owner's link down to the data is authoritative; a copy
   elsewhere is informative.
 
+## P2P and the outside world
+
+- Fetch and push are the outside world's way: a client reaches a server.
+  Inside P2P, the same needs are met by subscription and background
+  distribution (replication).
+- The boundary between the two is to be found, not assumed: which parts
+  of git's model live inside P2P, and which only at the edge. To be
+  evaluated once Hypercore is integrated and understood.
+
 ## Storage and deltas
 
 - Loose objects stay the model and the working store: each object
