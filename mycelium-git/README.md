@@ -121,6 +121,12 @@ Adapters, one per engine, each run against the same contract suite
   isomorphic-git stripped to plumbing (loose objects only, no working
   tree, pluggable fs, for Bare with bare-fs or Hyperdrive). It keeps
   isomorphic-git's API, so it shares that adapter (`isoStyleBackend`)
+  On a Hyperdrive: `p2pgitBackend('/', { fs: hyperdriveFs(drive) })`.
+  `hyperdriveFs` is p2p-git's own Hyperdrive adapter with what it lacks:
+  folders reported as folders (a Hyperdrive has no entries for them), and
+  `readlink` and `symlink`. The contract suite passes on it
+  (`test/hyperdrive.test.js`). Hyperdrive and Corestore are development
+  dependencies, used by that test only: they are not deployed.
 - `isogitBackend(gitdir, { fs })`: isomorphic-git (1.44.8) over a
   filesystem, node's by default. For compatibility: the same repository,
   read and written by an engine that also runs where native git does not.
