@@ -118,6 +118,33 @@ The seed node:
   outside world, as a bundle copied or mounted in, or a clone at the
   boundary. Every node after the seed node gets it from the cluster.
 
+## Operators: single-concern repositories
+
+- Single concern rather than all in one. A deployment is a multistep
+  process, and each step or batch is its own self-contained repository: an
+  operator. An operator does its one step and keeps the record of it.
+- The test-run instance is the first operator already: seeded, deployed,
+  executing its requests, recording everything, kept.
+- A deployment as a chain of operators, for example: a package operator
+  (builds the package repository), a bootstrap operator (the bootstrap
+  repository for a platform), a container operator (starts containers from
+  a plain base, hands each its bootstrap repository), a seed operator (turns
+  the first container into the seed node), a join operator (brings more
+  nodes in). The deployment repository holds the chain, its state and its
+  monitoring while the deployment lives.
+- Operators connect by the existing rules: input arrives as a request on
+  the operator's pending/default (with links or bundles); output is its
+  response on main; the next operator takes it in itself (import). Nobody
+  writes into another repository. Every step is recorded as units, so a
+  deployment can be traced step by step and each step rerun on its own.
+- With the current mycelium-git functionality this can start now: the
+  request flow and units, seed, deploy, extract, import and export,
+  bundles as transport between operators, Docker for containers. P2P can
+  begin as plain git between containers.
+- The order this gives: operator repositories and the package repository
+  first, building up to a container cluster deployed by a chain of
+  operators; then the Hypercore work on that infrastructure.
+
 ## Storage and deltas
 
 - Loose objects stay the model and the working store: each object
