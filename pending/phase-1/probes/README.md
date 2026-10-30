@@ -15,3 +15,9 @@ under development.
 - `p2pgit-adapter.mjs`: ran a write and merge scenario on native git and on
   p2p-git through the isomorphic-git-style adapter: identical oids and
   outcomes.
+- `hyperdrive-p2pgit.mjs` (2026-10-30): p2p-git on a Hyperdrive (Corestore,
+  hyperdrive 13.3.4), through p2p-git's hyperdrive-fs adapter. It found two
+  adapter gaps: folders reported as not folders (Stats(null)), and no
+  readlink or symlink. With both fixed, the same results as native git.
+  The fix is now hyperdriveFs in mycelium-git; the full contract suite
+  passes on it. Both gaps should be fixed in p2p-git's hyperdrive-fs.js.
