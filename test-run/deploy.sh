@@ -28,6 +28,11 @@ fi
 stage=$(mktemp -d)
 trap 'rm -rf "$stage" "$from"' EXIT
 cp -r "$src"/mycelium-* "$stage/"
+# Development dependencies (e.g. Hyperdrive, for unit tests) are not
+# deployed: pruned from the staged copy, offline.
+for m in "$stage"/mycelium-*; do
+  [ -d "$m/node_modules" ] && (cd "$m" && npm prune -q --omit=dev --offline --no-audit --no-fund >/dev/null)
+done
 cp "$from/runner.js" "$from/execute.js" "$from/report.js" "$from/hook.sh" "$stage/"
 cp "$from/package.json" "$stage/machinery.json"
 ids() { sed -n 's/.*"id": "\(.*\)".*/\1/p' "$1"; }
